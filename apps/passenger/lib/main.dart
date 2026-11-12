@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(const JibekPassengerApp());
 
@@ -57,6 +58,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   JibekOrderRequest? _createdOrder;
   static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
   static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSavedOrder();
+  }
 
   @override
   void dispose() {
@@ -467,12 +474,39 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       final created = await repository.createOrder(draft);
       if (!mounted) return;
       setState(() => _createdOrder = created);
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString('jibek_passenger_active_order_id', created.id);
       _message('Заявка создана. Номер: ' + created.id);
     } on JibekApiException catch (e) {
       _message('Не удалось отправить заявку: ' + e.message);
     } catch (_) { _message('Нет связи с сервером. Повторите позже.'); }
     finally { repository.close(); if (mounted) setState(() { _sendingOrder = false; _searching = false; }); }
   }
+  Future<void> _restoreSavedOrder() async {
+    if (_apiUrl.isEmpty || _devUserId.isEmpty) return;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final orderId = preferences.getString('jibek_passenger_active_order_id');
+      if (orderId == null || orderId.isEmpty) return;
+      final repository = _orderRepository();
+      try {
+        final order = await repository.getOrder(orderId: orderId);
+        if (!mounted) return;
+        setState(() => _createdOrder = order);
+      } on JibekApiException catch (error) {
+        if (error.statusCode == 404 || error.statusCode == 403) {
+          await preferences.remove('jibek_passenger_active_order_id');
+        } else {
+          _message('Не удалось восстановить заявку: ${error.message}');
+        }
+      } finally {
+        repository.close();
+      }
+    } catch (_) {
+      _message('Не удалось восстановить сохранённую заявку');
+    }
+  }
+
   String _statusLabel(JibekOrderStatus status) => switch (status) {
         JibekOrderStatus.searching => 'Ищем водителя',
         JibekOrderStatus.accepted => 'Водитель принял заказ',
