@@ -20,7 +20,7 @@ jobs:
   build-apks:
     name: Build Android APKs
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -44,75 +44,88 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Generate Android project files
-        run: flutter create --platforms=android --org kz.jibekzholy --project-name jibek_zholy_taxi .
-
-      - name: Prepare three minimal entry points
+      - name: Build three independent Android applications
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p lib
-
-          if [ ! -f lib/main_client.dart ]; then
-            cat > lib/main_client.dart <<'DART'
-          import 'package:flutter/material.dart';
-
-          void main() {
-            runApp(const MaterialApp(
-              home: Scaffold(
-                body: Center(child: Text('JIBEK ZHOLY TAXI - CLIENT')),
-              ),
-            ));
-          }
-          DART
-          fi
-
-          if [ ! -f lib/main_driver.dart ]; then
-            cat > lib/main_driver.dart <<'DART'
-          import 'package:flutter/material.dart';
-
-          void main() {
-            runApp(const MaterialApp(
-              home: Scaffold(
-                body: Center(child: Text('JIBEK ZHOLY TAXI - DRIVER')),
-              ),
-            ));
-          }
-          DART
-          fi
-
-          if [ ! -f lib/main_admin.dart ]; then
-            cat > lib/main_admin.dart <<'DART'
-          import 'package:flutter/material.dart';
-
-          void main() {
-            runApp(const MaterialApp(
-              home: Scaffold(
-                body: Center(child: Text('JIBEK ZHOLY TAXI - OWNER ADMIN')),
-              ),
-            ));
-          }
-          DART
-          fi
-
-      - name: Install Flutter dependencies
-        run: flutter pub get
-
-      - name: Build ClientTaxi.apk
-        run: |
-          flutter build apk --release -t lib/main_client.dart
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/ClientTaxi.apk
 
-      - name: Build DriverTaxi.apk
-        run: |
-          flutter build apk --release -t lib/main_driver.dart
-          cp build/app/outputs/flutter-apk/app-release.apk dist/DriverTaxi.apk
+          build_one() {
+            local app_dir="$1"
+            local project_name="$2"
+            local application_id="$3"
+            local app_label="$4"
+            local output_name="$5"
 
-      - name: Build OwnerAdmin.apk
-        run: |
-          flutter build apk --release -t lib/main_admin.dart
-          cp build/app/outputs/flutter-apk/app-release.apk dist/OwnerAdmin.apk
+            echo "===== Preparing ${output_name} ====="
+            (
+              cd "$app_dir"
+              flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
+
+              python3 - "$application_id" "$app_label" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          application_id, app_label = sys.argv[1], sys.argv[2]
+          gradle_files = [
+              pathlib.Path("android/app/build.gradle"),
+              pathlib.Path("android/app/build.gradle.kts"),
+          ]
+          gradle_file = next((path for path in gradle_files if path.exists()), None)
+          if gradle_file is None:
+              raise SystemExit("Android app Gradle file was not generated")
+
+          gradle = gradle_file.read_text(encoding="utf-8")
+          gradle, replacements = re.subn(
+              r'(applicationId\s*(?:=\s*)?")[^"]+(")',
+              lambda match: match.group(1) + application_id + match.group(2),
+              gradle,
+              count=1,
+          )
+          if replacements != 1:
+              raise SystemExit("Could not set the unique Android applicationId")
+          gradle_file.write_text(gradle, encoding="utf-8")
+
+          manifest_file = pathlib.Path("android/app/src/main/AndroidManifest.xml")
+          manifest = manifest_file.read_text(encoding="utf-8")
+          manifest = re.sub(
+              r'android:label="[^"]*"',
+              'android:label="' + app_label + '"',
+              manifest,
+              count=1,
+          )
+          permissions = [
+              "    <uses-permission android:name=\"android.permission.INTERNET\" />",
+              "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+              "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
+          ]
+          missing = [line for line in permissions if line.split('"')[1] not in manifest]
+          if missing:
+              marker = "<application"
+              if marker not in manifest:
+                  raise SystemExit("Android manifest has no application element")
+              manifest = manifest.replace(marker, "\n".join(missing) + "\n    " + marker, 1)
+          manifest_file.write_text(manifest, encoding="utf-8")
+
+          print(f"Configured applicationId: {application_id}")
+          print(f"Configured app label: {app_label}")
+          PY
+
+              flutter pub get
+              flutter build apk --release
+            )
+            cp "$app_dir/build/app/outputs/flutter-apk/app-release.apk" "dist/$output_name"
+            test -s "dist/$output_name"
+            echo "Created dist/$output_name"
+          }
+
+          build_one apps/passenger client_taxi kz.jibekzholy.client "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk
+          build_one apps/driver driver_taxi kz.jibekzholy.driver "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
+          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "ЖІБЕК ЖОЛЫ — Владелец" OwnerAdmin.apk
+
+          echo "===== APK files ====="
+          ls -lh dist/*.apk
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
