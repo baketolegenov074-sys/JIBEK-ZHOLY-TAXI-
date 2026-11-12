@@ -290,7 +290,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
       _notice(value
           ? 'Вы на линии. Статус сохранён на сервере.'
           : 'Вы отключились от линии.');
-      if (value) await _refreshOrders();
+      if (value) await _refreshOrders(manageLoading: false);
     } on JibekApiException catch (error) {
       _notice('Не удалось изменить статус: ${error.message}');
     } catch (_) {
@@ -301,13 +301,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
     }
   }
 
-  Future<void> _refreshOrders() async {
+  Future<void> _refreshOrders({bool manageLoading = true}) async {
     if (_services.isEmpty) { _notice('Выберите хотя бы одну услугу'); return; }
     if (_apiUrl.isEmpty || _devUserId.isEmpty) {
       _notice('Сервер или тестовый доступ не настроены');
       return;
     }
-    setState(() => _loadingOrders = true);
+    if (manageLoading) setState(() => _loadingOrders = true);
     final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
     try {
       final active = await repository.getActiveDriverOrder();
@@ -334,7 +334,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
       _notice('Нет связи с сервером');
     } finally {
       repository.close();
-      if (mounted) setState(() => _loadingOrders = false);
+      if (manageLoading && mounted) setState(() => _loadingOrders = false);
     }
   }
 
