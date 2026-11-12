@@ -87,3 +87,14 @@ def test_unrelated_user_cannot_read_order(client):
         headers={"X-Dev-User-Id": "someone-else"},
     )
     assert response.status_code == 403
+
+
+def test_driver_cannot_accept_own_order_or_see_it_in_available_feed(client):
+    own_order = client.post("/v1/orders", json=ORDER, headers=HEAD_D).json()["id"]
+    available = client.get(
+        "/v1/driver/orders/available?services=cityTaxi", headers=HEAD_D
+    )
+    assert available.status_code == 200
+    assert all(order["id"] != own_order for order in available.json())
+    response = client.post(f"/v1/orders/{own_order}/accept", headers=HEAD_D)
+    assert response.status_code == 403
