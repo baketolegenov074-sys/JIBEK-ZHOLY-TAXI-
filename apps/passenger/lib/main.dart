@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -18,6 +21,12 @@ class JibekPassengerApp extends StatelessWidget {
       );
 }
 
+class PlaceResult {
+  const PlaceResult(this.title, this.point);
+  final String title;
+  final LatLng point;
+}
+
 class PassengerMapPage extends StatefulWidget {
   const PassengerMapPage({super.key});
 
@@ -31,9 +40,15 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       TextEditingController(text: 'Моё местоположение');
   final TextEditingController _toController = TextEditingController();
   final LatLng _shymkent = const LatLng(42.3154, 69.5869);
-  LatLng? _userLocation;
+
+  LatLng? _fromPoint;
+  LatLng? _toPoint;
+  List<LatLng> _route = [];
   String _class = 'Эконом';
+  String? _distanceLabel;
+  String? _durationLabel;
   bool _locating = false;
+  bool _searching = false;
 
   @override
   void dispose() {
@@ -42,11 +57,17 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     super.dispose();
   }
 
+  void _message(String value) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(value), behavior: SnackBarBehavior.floating),
+    );
+  }
+
   Future<void> _findMe() async {
     setState(() => _locating = true);
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
+      if (!await Geolocator.isLocationServiceEnabled()) {
         _message('Включите геолокацию на телефоне');
         return;
       }
@@ -62,39 +83,155 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       final position = await Geolocator.getCurrentPosition();
       final point = LatLng(position.latitude, position.longitude);
       setState(() {
-        _userLocation = point;
+        _fromPoint = point;
         _fromController.text = 'Моё местоположение';
       });
       _mapController.move(point, 15);
+      if (_toPoint != null) await _buildRoute();
     } catch (_) {
-      _message('Не удалось определить местоположение. Попробуйте ещё раз.');
+      _message('Не удалось определить местоположение');
     } finally {
       if (mounted) setState(() => _locating = false);
     }
   }
 
-  void _message(String value) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value), behavior: SnackBarBehavior.floating),
+  Future<PlaceResult?> _geocode(String query) async {
+    final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+      'q': query,
+      'format': 'jsonv2',
+      'limit': '1',
+      'countrycodes': 'kz',
+      'accept-language': 'ru',
+    });
+    final response = await http.get(uri, headers: {
+      'User-Agent': 'JibekZholyPassenger/1.0 (mobile app)',
+      'Accept': 'application/json',
+    });
+    if (response.statusCode != 200) {
+      throw Exception('Сервис поиска адресов временно недоступен');
+    }
+    final data = jsonDecode(response.body) as List<dynamic>;
+    if (data.isEmpty) return null;
+    final item = data.first as Map<String, dynamic>;
+    final lat = double.tryParse(item['lat']?.toString() ?? '');
+    final lon = double.tryParse(item['lon']?.toString() ?? '');
+    if (lat == null || lon == null) return null;
+    return PlaceResult(
+      item['display_name']?.toString() ?? query,
+      LatLng(lat, lon),
     );
   }
 
-  void _selectDestination(TapPosition tapPosition, LatLng point) {
-    setState(() => _toController.text =
-        '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}');
-    _message('Точка назначения отмечена на карте');
+  Future<void> _searchDestination() async {
+    final query = _toController.text.trim();
+    if (query.isEmpty) {
+      _message('Введите адрес или название места');
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final result = await _geocode('$query, Шымкент, Казахстан');
+      if (result == null) {
+        _message('Адрес не найден. Уточните название или улицу.');
+        return;
+      }
+      setState(() {
+        _toPoint = result.point;
+        _toController.text = result.title;
+        _route = [];
+        _distanceLabel = null;
+        _durationLabel = null;
+      });
+      _mapController.move(result.point, 14);
+      if (_fromPoint != null) await _buildRoute();
+    } catch (e) {
+      _message('Ошибка поиска адреса: $e');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  Future<void> _buildRoute() async {
+    final start = _fromPoint;
+    final end = _toPoint;
+    if (start == null || end == null) {
+      _message('Сначала укажите точку отправления и назначения');
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final uri = Uri.parse(
+        'https://router.project-osrm.org/route/v1/driving/'
+        '${start.longitude},${start.latitude};'
+        '${end.longitude},${end.latitude}'
+        '?overview=full&geometries=geojson',
+      );
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'JibekZholyPassenger/1.0',
+      });
+      if (response.statusCode != 200) throw Exception('Ошибка построения маршрута');
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final routes = json['routes'] as List<dynamic>? ?? [];
+      if (routes.isEmpty) {
+        _message('Маршрут не найден');
+        return;
+      }
+      final route = routes.first as Map<String, dynamic>;
+      final geometry = route['geometry'] as Map<String, dynamic>;
+      final coordinates = geometry['coordinates'] as List<dynamic>;
+      final points = coordinates.map((pair) {
+        final p = pair as List<dynamic>;
+        return LatLng((p[1] as num).toDouble(), (p[0] as num).toDouble());
+      }).toList();
+      final meters = (route['distance'] as num).toDouble();
+      final seconds = (route['duration'] as num).toDouble();
+      setState(() {
+        _route = points;
+        _distanceLabel = meters >= 1000
+            ? '${(meters / 1000).toStringAsFixed(1)} км'
+            : '${meters.round()} м';
+        _durationLabel = '${(seconds / 60).ceil()} мин';
+      });
+      final bounds = LatLngBounds.fromPoints(points);
+      _mapController.fitCamera(CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.fromLTRB(42, 100, 42, 330),
+      ));
+    } catch (e) {
+      _message('Не удалось построить маршрут: $e');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  void _selectMapPoint(TapPosition tapPosition, LatLng point) {
+    setState(() {
+      _toPoint = point;
+      _toController.text =
+          '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+      _route = [];
+      _distanceLabel = null;
+      _durationLabel = null;
+    });
+    if (_fromPoint != null) _buildRoute();
   }
 
   @override
   Widget build(BuildContext context) {
     final markers = <Marker>[
-      if (_userLocation != null)
+      if (_fromPoint != null)
         Marker(
-          point: _userLocation!,
+          point: _fromPoint!,
+          width: 42,
+          height: 42,
+          child: const Icon(Icons.my_location, color: Color(0xFF168C8C), size: 32),
+        ),
+      if (_toPoint != null)
+        Marker(
+          point: _toPoint!,
           width: 46,
           height: 46,
-          child: const Icon(Icons.my_location, color: Color(0xFF168C8C), size: 34),
+          child: const Icon(Icons.location_on, color: Color(0xFFC84D43), size: 42),
         ),
     ];
 
@@ -106,13 +243,23 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
             options: MapOptions(
               initialCenter: _shymkent,
               initialZoom: 13,
-              onTap: _selectDestination,
+              onTap: _selectMapPoint,
             ),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'kz.jibekzholy.passenger',
               ),
+              if (_route.isNotEmpty)
+                PolylineLayer(polylines: [
+                  Polyline(
+                    points: _route,
+                    strokeWidth: 5,
+                    color: const Color(0xFF168C8C),
+                    borderStrokeWidth: 1.5,
+                    borderColor: Colors.white,
+                  ),
+                ]),
               MarkerLayer(markers: markers),
               const RichAttributionWidget(
                 attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
@@ -157,11 +304,11 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
             ),
           ),
           DraggableScrollableSheet(
-            initialChildSize: .43,
-            minChildSize: .34,
+            initialChildSize: .47,
+            minChildSize: .36,
             maxChildSize: .78,
             snap: true,
-            snapSizes: const [.43, .78],
+            snapSizes: const [.47, .78],
             builder: (context, scrollController) => Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -172,16 +319,33 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                 controller: scrollController,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 children: [
-                  Center(
-                    child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8))),
-                  ),
+                  Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
                   const SizedBox(height: 16),
                   const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
                   const SizedBox(height: 14),
-                  _placeField(Icons.radio_button_checked, 'Откуда', _fromController),
+                  _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom()),
                   const SizedBox(height: 9),
-                  _placeField(Icons.location_on_rounded, 'Куда', _toController),
-                  const SizedBox(height: 16),
+                  _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination()),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _searching ? null : _searchDestination,
+                      icon: const Icon(Icons.search),
+                      label: const Text('Найти адрес'),
+                    ),
+                  ),
+                  if (_distanceLabel != null && _durationLabel != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: const Color(0xFFEAF5F3), borderRadius: BorderRadius.circular(14)),
+                      child: Row(children: [
+                        const Icon(Icons.route, color: Color(0xFF168C8C)),
+                        const SizedBox(width: 10),
+                        Text('$_distanceLabel  •  $_durationLabel', style: const TextStyle(fontWeight: FontWeight.w800)),
+                      ]),
+                    ),
+                  const SizedBox(height: 8),
                   const Text('Класс автомобиля', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
                   const SizedBox(height: 9),
                   Wrap(
@@ -199,20 +363,26 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   SizedBox(
                     height: 54,
                     child: FilledButton.icon(
-                      onPressed: () {
-                        if (_toController.text.trim().isEmpty) {
-                          _message('Укажите место назначения или коснитесь карты');
+                      onPressed: _searching ? null : () {
+                        if (_toPoint == null) {
+                          _searchDestination();
+                        } else if (_fromPoint == null) {
+                          _findMe();
+                        } else if (_route.isEmpty) {
+                          _buildRoute();
                         } else {
-                          _message('Экран заказа готов. Подключение подачи водителей — следующий этап.');
+                          _message('Маршрут рассчитан. Отправка заказа водителям подключается следующим этапом.');
                         }
                       },
-                      icon: const Icon(Icons.local_taxi_rounded),
-                      label: const Text('Продолжить', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      icon: _searching
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.local_taxi_rounded),
+                      label: Text(_searching ? 'Ищем...' : 'Продолжить', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                       style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10243A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Коснитесь карты, чтобы отметить точку назначения.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7A8796), fontSize: 12)),
+                  const Text('Введите адрес назначения или коснитесь карты. Для построения маршрута разрешите геолокацию.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7A8796), fontSize: 12)),
                 ],
               ),
             ),
@@ -222,10 +392,39 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     );
   }
 
-  Widget _placeField(IconData icon, String hint, TextEditingController controller) {
+  Future<void> _searchFrom() async {
+    final query = _fromController.text.trim();
+    if (query.isEmpty || query == 'Моё местоположение') {
+      await _findMe();
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final result = await _geocode('$query, Шымкент, Казахстан');
+      if (result == null) {
+        _message('Адрес отправления не найден');
+        return;
+      }
+      setState(() => _fromPoint = result.point);
+      _mapController.move(result.point, 14);
+      if (_toPoint != null) await _buildRoute();
+    } catch (e) {
+      _message('Ошибка поиска адреса: $e');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  Widget _placeField(
+    IconData icon,
+    String hint,
+    TextEditingController controller, {
+    required ValueChanged<String> onSubmitted,
+  }) {
     return TextField(
       controller: controller,
-      textInputAction: TextInputAction.next,
+      textInputAction: TextInputAction.search,
+      onSubmitted: onSubmitted,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: const Color(0xFF168C8C)),
         hintText: hint,
