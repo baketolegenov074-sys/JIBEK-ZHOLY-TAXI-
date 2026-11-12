@@ -341,7 +341,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: const Text('Найти адрес'),
                     ),
                   ),
-                  if (_createdOrder != null)\n                    ListTile(leading: const Icon(Icons.check_circle, color: Colors.green), title: const Text('Заявка отправлена'), subtitle: Text('Статус: ' + _createdOrder!.status.name)),\n                  if (_distanceLabel != null && _durationLabel != null)
+                  if (_createdOrder != null)
+                    ListTile(leading: const Icon(Icons.check_circle, color: Colors.green), title: const Text('Заявка отправлена'), subtitle: Text('Статус: ' + _createdOrder!.status.name)),
+                  if (_distanceLabel != null && _durationLabel != null)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: const Color(0xFFEAF5F3), borderRadius: BorderRadius.circular(14)),
