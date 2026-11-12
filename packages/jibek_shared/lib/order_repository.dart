@@ -16,6 +16,11 @@ abstract interface class JibekOrderRepository {
     required Set<JibekServiceType> services,
   });
 
+  Future<void> updateDriverPresence({
+    required bool isOnline,
+    required Set<JibekServiceType> services,
+  });
+
   Future<JibekOrderRequest> acceptOrder({required String orderId});
 
   Future<JibekOrderRequest> updateOrderStatus({
@@ -172,6 +177,23 @@ class DevJibekApiRepository implements JibekOrderRepository {
     return decoded
         .map((item) => _orderFromApi(Map<String, Object?>.from(item as Map)))
         .toList(growable: false);
+  }
+
+  @override
+  Future<void> updateDriverPresence({
+    required bool isOnline,
+    required Set<JibekServiceType> services,
+  }) async {
+    await _send(
+      (headers) => _client.put(
+        _uri('/v1/driver/presence'),
+        headers: headers,
+        body: jsonEncode({
+          'isOnline': isOnline,
+          'services': services.map((service) => service.name).toList(),
+        }),
+      ),
+    );
   }
 
   @override
