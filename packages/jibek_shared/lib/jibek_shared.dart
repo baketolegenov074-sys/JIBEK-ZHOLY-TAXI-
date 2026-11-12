@@ -125,7 +125,7 @@ class JibekHomeShell extends StatelessWidget {
           children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
             Text(roleLabel, style: const TextStyle(
-              color: goldLight, fontSize: 10, letterSpacing: 1.5,
+              color: JibekTheme.goldLight, fontSize: 10, letterSpacing: 1.5,
               fontWeight: FontWeight.w700,
             )),
           ],
@@ -144,7 +144,7 @@ class JibekHomeShell extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 20, 18, 32),
           children: [
-            Text(subtitle, style: const TextStyle(color: muted, fontSize: 15)),
+            Text(subtitle, style: const TextStyle(color: JibekTheme.muted, fontSize: 15)),
             const SizedBox(height: 22),
             ...children,
           ],
@@ -189,7 +189,7 @@ class JibekServiceTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE9C76D)),
                 ),
-                child: Icon(icon, color: navy, size: 27),
+                child: Icon(icon, color: JibekTheme.navy, size: 27),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -197,16 +197,16 @@ class JibekServiceTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w900, color: ink,
+                      fontSize: 16, fontWeight: FontWeight.w900, color: JibekTheme.ink,
                     )),
                     const SizedBox(height: 4),
                     Text(subtitle, style: const TextStyle(
-                      fontSize: 13, color: muted,
+                      fontSize: 13, color: JibekTheme.muted,
                     )),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: gold),
+              const Icon(Icons.chevron_right_rounded, color: JibekTheme.gold),
             ],
           ),
         ),
