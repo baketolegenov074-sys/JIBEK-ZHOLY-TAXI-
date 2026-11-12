@@ -53,7 +53,8 @@ service-specific required fields, service area and permitted status changes.
 | Method | Path | Purpose |
 |---|---|---|
 | POST | `/v1/orders` | Passenger creates an order |
-| GET | `/v1/driver/orders/available` | Driver fetches compatible open orders |\n| GET | `/v1/driver/orders/active` | Restore the driver's current active order |
+| GET | `/v1/driver/orders/available` | Driver fetches compatible open orders |
+| GET | `/v1/driver/orders/active` | Restore the driver's current active order |
 | POST | `/v1/orders/{orderId}/accept` | Driver atomically accepts an order |
 | PATCH | `/v1/orders/{orderId}/status` | Update an allowed order status |
 | POST | `/v1/driver/location` | Publish an explicitly shared driver location |
