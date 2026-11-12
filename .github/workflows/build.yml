@@ -177,7 +177,7 @@ jobs:
           }
 
           build_one apps/passenger client_taxi kz.jibekzholy.client "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk
-          build_one apps/driver driver_taxi kz.jibekzholy.driver "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
+          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
           build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "ЖІБЕК ЖОЛЫ — Владелец" OwnerAdmin.apk
 
           echo "===== APK files ====="
