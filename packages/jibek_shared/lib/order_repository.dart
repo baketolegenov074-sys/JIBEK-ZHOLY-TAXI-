@@ -9,7 +9,6 @@ abstract interface class JibekOrderRepository {
   Future<JibekOrderRequest> createOrder(JibekOrderRequest request);
 
   Future<List<JibekOrderRequest>> getAvailableOrders({
-    required String driverId,
     required Set<JibekServiceType> services,
   });
 
@@ -50,7 +49,7 @@ class DevJibekApiRepository implements JibekOrderRepository {
     return {..._baseHeaders, 'X-Dev-User-Id': userId};
   }
 
-  Uri _uri(String path, [Map<String, String>? query]) =>
+  Uri _uri(String path, [Map<String, dynamic>? query]) =>
       _baseUri.resolve(path).replace(queryParameters: query);
 
   Future<Map<String, Object?>> _send(
@@ -111,13 +110,11 @@ class DevJibekApiRepository implements JibekOrderRepository {
 
   @override
   Future<List<JibekOrderRequest>> getAvailableOrders({
-    required String driverId,
     required Set<JibekServiceType> services,
   }) async {
     if (services.isEmpty) return [];
-    final query = <String, String>{
-      for (var i = 0; i < services.length; i++)
-        'services': services.elementAt(i).name,
+    final query = <String, dynamic>{
+      'services': services.map((service) => service.name).toList(),
     };
     final response = await _client.get(
       _uri('/v1/driver/orders/available', query),
