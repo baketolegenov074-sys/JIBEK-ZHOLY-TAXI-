@@ -1,0 +1,11 @@
+name: jibek_shared
+description: Shared design system for Jibek Zholy Flutter apps.
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
