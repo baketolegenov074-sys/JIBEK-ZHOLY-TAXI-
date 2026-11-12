@@ -33,7 +33,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
   LatLng? _driverPoint;
   bool _online = false;
   bool _loadingLocation = false;
-  String _service = 'Такси';
+  final Set<String> _services = {'Такси'};
   List<JibekOrderRequest> _orders = [];
   JibekOrderRequest? _activeOrder;
   bool _loadingOrders = false;
@@ -261,10 +261,11 @@ class _DriverMapPageState extends State<DriverMapPage> {
       'Эвакуатор': JibekServiceType.towTruck,
       'Шиномонтаж': JibekServiceType.mobileTire,
     };
-    return {mapping[_service]!};
+    return _services.map((label) => mapping[label]!).toSet();
   }
 
   Future<void> _refreshOrders() async {
+    if (_services.isEmpty) { _notice('Выберите хотя бы одну услугу'); return; }
     if (_apiUrl.isEmpty || _devUserId.isEmpty) {
       _notice('Сервер или тестовый доступ не настроены');
       return;
@@ -392,13 +393,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
   }
 
   Widget _serviceChip(String label, IconData icon) {
-    final selected = _service == label;
+    final selected = _services.contains(label);
     return FilterChip(
       selected: selected,
       showCheckmark: false,
       avatar: Icon(icon, size: 18, color: selected ? const Color(0xFF10243A) : const Color(0xFF687386)),
       label: Text(label),
-      onSelected: (_) => setState(() => _service = label),
+      onSelected: (value) => setState(() { if (value) { _services.add(label); } else { _services.remove(label); } }),
       selectedColor: const Color(0xFFE8D5AC),
       side: BorderSide(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
     );
