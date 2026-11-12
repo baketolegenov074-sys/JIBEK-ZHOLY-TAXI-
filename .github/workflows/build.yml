@@ -50,16 +50,59 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for app in passenger driver owner_admin; do
-            settings="apps/$app/android/settings.gradle"
-            wrapper="apps/$app/android/gradle/wrapper/gradle-wrapper.properties"
-            app_gradle="apps/$app/android/app/build.gradle"
-            sed -i 's/id "com.android.application" version "[^"]*"/id "com.android.application" version "8.6.1"/' "$settings"
-            sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "2.0.21"/' "$settings"
-            sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip#' "$wrapper"
-            sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' "$app_gradle"
-            sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 35/' "$app_gradle"
-          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for app in ("passenger", "driver", "owner_admin"):
+              android = Path("apps") / app / "android"
+              settings_kts = android / "settings.gradle.kts"
+              settings_groovy = android / "settings.gradle"
+              app_kts = android / "app" / "build.gradle.kts"
+              app_groovy = android / "app" / "build.gradle"
+              wrapper = android / "gradle" / "wrapper" / "gradle-wrapper.properties"
+
+              settings = settings_kts if settings_kts.exists() else settings_groovy
+              app_gradle = app_kts if app_kts.exists() else app_groovy
+              if not settings.exists() or not app_gradle.exists() or not wrapper.exists():
+                  raise SystemExit(f"Android Gradle files are missing for {app}")
+
+              kotlin_dsl = settings.suffix == ".kts"
+              settings_text = settings.read_text()
+              app_text = app_gradle.read_text()
+              wrapper_text = wrapper.read_text()
+
+              android_pattern = r'id\s*\(?\s*["\']com\.android\.application["\']\s*\)?\s+version\s+["\'][^"\']+["\']'
+              kotlin_pattern = r'id\s*\(?\s*["\'](?:org\.jetbrains\.kotlin\.android|kotlin-android)["\']\s*\)?\s+version\s+["\'][^"\']+["\']'
+
+              android_replacement = 'id("com.android.application") version "8.6.1"' if kotlin_dsl else 'id "com.android.application" version "8.6.1"'
+              kotlin_replacement = 'id("org.jetbrains.kotlin.android") version "2.0.21"' if kotlin_dsl else 'id "org.jetbrains.kotlin.android" version "2.0.21"'
+
+              settings_text, android_count = re.subn(android_pattern, android_replacement, settings_text, count=1)
+              settings_text, kotlin_count = re.subn(kotlin_pattern, kotlin_replacement, settings_text, count=1)
+              if android_count != 1 or kotlin_count != 1:
+                  raise SystemExit(f"Could not pin Android/Kotlin plugin versions in {settings}")
+
+              app_text, compile_count = re.subn(r'compileSdk\s*=\s*flutter\.compileSdkVersion', 'compileSdk = 35', app_text, count=1)
+              app_text, target_count = re.subn(r'targetSdk\s*=\s*flutter\.targetSdkVersion', 'targetSdk = 35', app_text, count=1)
+              if compile_count != 1 or target_count != 1:
+                  raise SystemExit(f"Could not set compileSdk/targetSdk in {app_gradle}")
+
+              wrapper_text, wrapper_count = re.subn(
+                  r'^distributionUrl=.*$',
+                  'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip',
+                  wrapper_text,
+                  count=1,
+                  flags=re.MULTILINE,
+              )
+              if wrapper_count != 1:
+                  raise SystemExit(f"Could not pin Gradle wrapper in {wrapper}")
+
+              settings.write_text(settings_text)
+              app_gradle.write_text(app_text)
+              wrapper.write_text(wrapper_text)
+              print(f"Configured {app} ({'Kotlin DSL' if kotlin_dsl else 'Groovy DSL'})")
+          PY
 
       - name: Build passenger APK
         working-directory: apps/passenger
