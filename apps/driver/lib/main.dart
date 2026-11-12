@@ -175,7 +175,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       ),
                       Switch.adaptive(
                         value: _online,
-                        activeThumbColor: const Color(0xFF168C8C),
+                        activeColor: const Color(0xFF168C8C),
                         onChanged: _loadingOrders ? null : _setOnline,
                       ),
                     ],
