@@ -98,3 +98,47 @@ def test_driver_cannot_accept_own_order_or_see_it_in_available_feed(client):
     assert all(order["id"] != own_order for order in available.json())
     response = client.post(f"/v1/orders/{own_order}/accept", headers=HEAD_D)
     assert response.status_code == 403
+
+
+def test_driver_can_restore_active_order_and_cannot_accept_another(client):
+    first_id = client.post("/v1/orders", json=ORDER, headers=HEAD_P).json()["id"]
+    second_id = client.post(
+        "/v1/orders",
+        json={**ORDER, "destination": {"latitude": 42.33, "longitude": 69.62}},
+        headers={"X-Dev-User-Id": "passenger-2"},
+    ).json()["id"]
+    accepted = client.post(f"/v1/orders/{first_id}/accept", headers=HEAD_D)
+    assert accepted.status_code == 200
+
+    active = client.get("/v1/driver/orders/active", headers=HEAD_D)
+    assert active.status_code == 200
+    assert active.json()["id"] == first_id
+
+    rejected = client.post(f"/v1/orders/{second_id}/accept", headers=HEAD_D)
+    assert rejected.status_code == 409
+    assert rejected.json()["detail"] == "Сначала завершите текущий заказ"
+
+    advanced = client.patch(
+        f"/v1/orders/{first_id}/status",
+        json={"status": "completed"},
+        headers=HEAD_D,
+    )
+    assert advanced.status_code == 409  # must progress through trip states first
+    client.patch(
+        f"/v1/orders/{first_id}/status",
+        json={"status": "driverArriving"},
+        headers=HEAD_D,
+    )
+    client.patch(
+        f"/v1/orders/{first_id}/status",
+        json={"status": "inProgress"},
+        headers=HEAD_D,
+    )
+    client.patch(
+        f"/v1/orders/{first_id}/status",
+        json={"status": "completed"},
+        headers=HEAD_D,
+    )
+    empty = client.get("/v1/driver/orders/active", headers=HEAD_D)
+    assert empty.status_code == 200
+    assert empty.json() is None
