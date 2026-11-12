@@ -171,10 +171,10 @@ jobs:
           }
           """
               if "create(\"release\")" not in gradle:
-                  gradle = gradle.replace("android {", "android {\\n" + signing_block, 1)
+                  gradle = gradle.replace("android {", "android {\n" + signing_block, 1)
               release_line = 'release {'
               if 'signingConfig = signingConfigs.getByName("release")' not in gradle:
-                  gradle = gradle.replace(release_line, release_line + '\\n            signingConfig = signingConfigs.getByName("release")', 1)
+                  gradle = gradle.replace(release_line, release_line + '\n            signingConfig = signingConfigs.getByName("release")', 1)
           else:
               signing_block = """
           signingConfigs {
@@ -187,12 +187,12 @@ jobs:
           }
           """
               if "signingConfigs {" not in gradle:
-                  gradle = gradle.replace("android {", "android {\\n" + signing_block, 1)
+                  gradle = gradle.replace("android {", "android {\n" + signing_block, 1)
               if "signingConfig signingConfigs.release" not in gradle:
                   if "signingConfig signingConfigs.debug" in gradle:
                       gradle = gradle.replace("signingConfig signingConfigs.debug", "signingConfig signingConfigs.release", 1)
                   else:
-                      gradle = gradle.replace("release {", "release {\\n            signingConfig signingConfigs.release", 1)
+                      gradle = gradle.replace("release {", "release {\n            signingConfig signingConfigs.release", 1)
           gradle, replacements = re.subn(
               r'(applicationId\s*(?:=\s*)?")[^"]+(")',
               lambda match: match.group(1) + application_id + match.group(2),
