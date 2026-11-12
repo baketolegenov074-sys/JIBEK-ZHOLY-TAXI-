@@ -97,7 +97,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'kz.jibekzholy.driver',
+                userAgentPackageName: 'kz.jibekzholy.driverapp',
               ),
               MarkerLayer(markers: markers),
               const RichAttributionWidget(
