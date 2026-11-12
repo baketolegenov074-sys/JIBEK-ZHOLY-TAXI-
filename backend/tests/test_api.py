@@ -142,3 +142,28 @@ def test_driver_can_restore_active_order_and_cannot_accept_another(client):
     empty = client.get("/v1/driver/orders/active", headers=HEAD_D)
     assert empty.status_code == 200
     assert empty.json() is None
+
+
+
+@pytest.mark.parametrize(
+    ("service", "note"),
+    [
+        ("parcel", "Коробка с документами"),
+        ("towTruck", "Toyota Camry, не заводится"),
+        ("mobileTire", "Колёса R16, прокол"),
+    ],
+)
+def test_assistance_services_require_details(client, service, note):
+    missing = client.post(
+        "/v1/orders",
+        json={**ORDER, "service": service, "vehicleClass": None, "note": "   "},
+        headers=HEAD_P,
+    )
+    assert missing.status_code == 422
+
+    valid = client.post(
+        "/v1/orders",
+        json={**ORDER, "service": service, "vehicleClass": None, "note": note},
+        headers=HEAD_P,
+    )
+    assert valid.status_code == 201
