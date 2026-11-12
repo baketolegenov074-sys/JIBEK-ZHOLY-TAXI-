@@ -84,7 +84,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
               width: 48,
               height: 48,
               child: const Icon(Icons.local_taxi_rounded,
-                  color: Color(0xFF168C8C), size: 38),
+                  color: Color(0xFFD6A52F), size: 38),
             ),
           ];
 
@@ -113,7 +113,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10243A),
+                      color: const Color(0xFF071B45),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
                     ),
@@ -135,7 +135,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       onPressed: _loadingLocation ? null : _locateDriver,
                       icon: _loadingLocation
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, color: Color(0xFF10243A)),
+                          : const Icon(Icons.my_location_rounded, color: Color(0xFF071B45)),
                     ),
                   ),
                 ],
@@ -166,7 +166,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
                             const SizedBox(height: 4),
                             Text(_online ? 'Вы включили режим на линии' : 'Вы сейчас не принимаете заявки',
                                 style: const TextStyle(color: Color(0xFF687386), fontSize: 13)),
@@ -175,7 +175,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       ),
                       Switch.adaptive(
                         value: _online,
-                        activeColor: const Color(0xFF168C8C),
+                        activeColor: const Color(0xFFD6A52F),
                         onChanged: _loadingOrders ? null : _setOnline,
                       ),
                     ],
@@ -184,13 +184,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: _online ? const Color(0xFFEAF5F1) : const Color(0xFFF1F3F6),
+                      color: _online ? const Color(0xFFFFF3D4) : const Color(0xFFF1F3F6),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       children: [
                         Icon(_online ? Icons.wifi_tethering_rounded : Icons.pause_circle_outline,
-                            color: _online ? const Color(0xFF16834A) : const Color(0xFF687386), size: 28),
+                            color: _online ? const Color(0xFF1D7A50) : const Color(0xFF687386), size: 28),
                         const SizedBox(width: 11),
                         Expanded(
                           child: Text(
@@ -216,7 +216,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
+                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF071B45)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
                   const SizedBox(height: 10),
                   if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
                   if (_activeOrder != null) _activeOrderCard(_activeOrder!),
@@ -424,15 +424,15 @@ class _DriverMapPageState extends State<DriverMapPage> {
   Widget _activeOrderCard(JibekOrderRequest order) {
     final next = _nextStatus(order.status);
     return Card(
-      color: const Color(0xFFEAF5F1),
+      color: const Color(0xFFFFF3D4),
       margin: const EdgeInsets.only(bottom: 14),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF16834A))),
+          const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1D7A50))),
           const SizedBox(height: 6),
           Text(_serviceLabel(order.service),
-              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
           const SizedBox(height: 4),
           Text(_statusLabel(order.status), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
@@ -477,7 +477,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
     return FilterChip(
       selected: selected,
       showCheckmark: false,
-      avatar: Icon(icon, size: 18, color: selected ? const Color(0xFF10243A) : const Color(0xFF687386)),
+      avatar: Icon(icon, size: 18, color: selected ? const Color(0xFF071B45) : const Color(0xFF687386)),
       label: Text(label),
       onSelected: (value) {
         setState(() {
@@ -496,7 +496,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
           }
         }
       },
-      selectedColor: const Color(0xFFE8D5AC),
+      selectedColor: const Color(0xFFFFE7A0),
       side: BorderSide(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
     );
   }

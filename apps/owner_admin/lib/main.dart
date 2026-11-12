@@ -54,7 +54,7 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
             children: [
               Text('ЖІБЕК ЖОЛЫ', style: TextStyle(fontWeight: FontWeight.w900)),
               Text('ПАНЕЛЬ ВЛАДЕЛЬЦА',
-                  style: TextStyle(fontSize: 10, letterSpacing: 1.3)),
+                  style: TextStyle(fontSize: 10, letterSpacing: 1.3, color: Color(0xFFFFE7A0), fontWeight: FontWeight.w700)),
             ],
           ),
           actions: [
@@ -89,11 +89,23 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
   Widget _dashboard() => ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          const Text('Добро пожаловать',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 6),
-          const Text('Управление службой такси и сервисами',
-              style: TextStyle(color: Color(0xFF687386))),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF071B45), Color(0xFF17458C)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFE5B43C), width: 1.2),
+              boxShadow: const [BoxShadow(color: Color(0x22071B45), blurRadius: 16, offset: Offset(0, 7))],
+            ),
+            child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [Icon(Icons.location_on_rounded, color: Color(0xFFFFE7A0), size: 28), SizedBox(width: 8), Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: .5))]),
+              SizedBox(height: 12),
+              Text('Добро пожаловать', style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
+              SizedBox(height: 5),
+              Text('Управление службой такси и сервисами', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 13)),
+            ]),
+          ),
+
           const SizedBox(height: 18),
           _statusBanner(),
           const SizedBox(height: 18),
@@ -266,7 +278,7 @@ class _MetricCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: const Color(0xFF168C8C)),
+              Icon(icon, color: const Color(0xFFD6A52F)),
               const SizedBox(height: 12),
               Text(value, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
               Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF687386))),
@@ -285,7 +297,7 @@ class _ServiceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
         child: ListTile(
-          leading: Icon(icon, color: const Color(0xFF168C8C)),
+          leading: Icon(icon, color: const Color(0xFFD6A52F)),
           title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
           subtitle: Text(subtitle),
         ),
