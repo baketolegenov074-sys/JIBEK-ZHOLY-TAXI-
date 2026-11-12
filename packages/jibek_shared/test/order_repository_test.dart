@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -48,6 +50,38 @@ void main() {
       );
 
       expect(await repository.getActiveDriverOrder(), isNull);
+      repository.close();
+    });
+
+    test('publishes driver presence and selected services', () async {
+      late http.Request captured;
+      final client = MockClient((request) async {
+        captured = request;
+        return http.Response('{"ok":true}', 200,
+            headers: {'content-type': 'application/json; charset=utf-8'});
+      });
+      final repository = DevJibekApiRepository(
+        baseUrl: 'https://api.example.test',
+        devUserIdProvider: () async => 'driver-7',
+        client: client,
+      );
+
+      await repository.updateDriverPresence(
+        isOnline: true,
+        services: {JibekServiceType.cityTaxi, JibekServiceType.parcel},
+      );
+
+      expect(captured.method, 'PUT');
+      expect(captured.url.path, '/v1/driver/presence');
+      expect(captured.headers['X-Dev-User-Id'], 'driver-7');
+      expect(captured.headers['content-type'], contains('application/json'));
+      expect(
+        jsonDecode(captured.body),
+        {
+          'isOnline': true,
+          'services': containsAll(['cityTaxi', 'parcel']),
+        },
+      );
       repository.close();
     });
 
