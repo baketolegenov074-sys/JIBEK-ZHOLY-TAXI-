@@ -51,6 +51,10 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   String? _durationLabel;
   bool _locating = false;
   bool _searching = false;
+  bool _sendingOrder = false;
+  JibekOrderRequest? _createdOrder;
+  static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
+  static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
 
   @override
   void dispose() {
@@ -337,7 +341,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: const Text('Найти адрес'),
                     ),
                   ),
-                  if (_distanceLabel != null && _durationLabel != null)
+                  if (_createdOrder != null)\n                    ListTile(leading: const Icon(Icons.check_circle, color: Colors.green), title: const Text('Заявка отправлена'), subtitle: Text('Статус: ' + _createdOrder!.status.name)),\n                  if (_distanceLabel != null && _durationLabel != null)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: const Color(0xFFEAF5F3), borderRadius: BorderRadius.circular(14)),
@@ -365,7 +369,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   SizedBox(
                     height: 54,
                     child: FilledButton.icon(
-                      onPressed: _searching ? null : () {
+                      onPressed: (_searching || _sendingOrder) ? null : () {
                         if (_toPoint == null) {
                           _searchDestination();
                         } else if (_fromPoint == null) {
@@ -373,13 +377,13 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                         } else if (_route.isEmpty) {
                           _buildRoute();
                         } else {
-                          _message('Маршрут рассчитан. Отправка заказа водителям подключается следующим этапом.');
+                          _submitOrder();
                         }
                       },
                       icon: _searching
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
-                      label: Text(_searching ? 'Ищем...' : 'Продолжить', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? 'Заказать такси' : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                       style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10243A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
@@ -394,6 +398,33 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     );
   }
 
+  Future<void> _submitOrder() async {
+    if (_fromPoint == null || _toPoint == null || _route.isEmpty) {
+      _message('Сначала постройте маршрут'); return;
+    }
+    if (_apiUrl.isEmpty || _devUserId.isEmpty) {
+      _message('Отправка пока закрыта: сервер и тестовый доступ не настроены'); return;
+    }
+    setState(() => _sendingOrder = true);
+    final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
+    try {
+      final draft = JibekOrderRequest(
+        id: 'local-draft', service: JibekServiceType.cityTaxi,
+        pickup: JibekGeoPoint(latitude: _fromPoint!.latitude, longitude: _fromPoint!.longitude, address: _fromController.text),
+        destination: JibekGeoPoint(latitude: _toPoint!.latitude, longitude: _toPoint!.longitude, address: _toController.text),
+        createdAt: DateTime.now(), vehicleClass: _class,
+      );
+      final validation = draft.validate();
+      if (validation != null) { _message(validation); return; }
+      final created = await repository.createOrder(draft);
+      if (!mounted) return;
+      setState(() => _createdOrder = created);
+      _message('Заявка создана. Номер: ' + created.id);
+    } on JibekApiException catch (e) {
+      _message('Не удалось отправить заявку: ' + e.message);
+    } catch (_) { _message('Нет связи с сервером. Повторите позже.'); }
+    finally { repository.close(); if (mounted) setState(() { _sendingOrder = false; _searching = false; }); }
+  }
   Future<void> _searchFrom() async {
     final query = _fromController.text.trim();
     if (query.isEmpty || query == 'Моё местоположение') {
