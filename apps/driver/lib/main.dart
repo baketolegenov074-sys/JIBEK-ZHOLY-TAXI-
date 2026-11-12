@@ -229,7 +229,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       border: Border.all(color: const Color(0xFFE4E9EF)),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
                         Icon(Icons.inbox_outlined, size: 36, color: Color(0xFF9AA5B2)),
                         SizedBox(height: 8),
