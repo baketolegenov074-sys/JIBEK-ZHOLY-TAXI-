@@ -14,9 +14,10 @@ Flutter migration is developed on `flutter-migration`. The original Kotlin modul
 |---|---|
 | OpenStreetMap tiles | Integrated in both screens |
 | Foreground device location | Permission-gated, user initiated |
-| Address search | Passenger app uses Nominatim |
+| Address search | Passenger app uses Nominatim for Kazakhstan-wide pickup and destination search |
 | Road route preview | Passenger app uses OSRM demo endpoint |
 | Passenger order creation and manual status refresh | API integration scaffolded; requires configured backend and test identity |
+| Passenger service selection | City taxi, intercity, parcel, tow truck and mobile tire request types; notes field for service details |
 | Passenger order recovery after app restart | Saves order ID locally and restores current server status when API access is configured |
 | Passenger cancellation before trip start | API and passenger UI implemented; requires configured backend |
 | Driver accounts and verification | Not connected |
