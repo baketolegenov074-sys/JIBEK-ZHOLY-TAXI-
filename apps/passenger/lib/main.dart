@@ -52,6 +52,8 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   bool _locating = false;
   bool _searching = false;
   bool _sendingOrder = false;
+  bool _refreshingOrder = false;
+  bool _cancellingOrder = false;
   JibekOrderRequest? _createdOrder;
   static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
   static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
@@ -342,7 +344,51 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     ),
                   ),
                   if (_createdOrder != null)
-                    ListTile(leading: const Icon(Icons.check_circle, color: Colors.green), title: const Text('Заявка отправлена'), subtitle: Text('Статус: ' + _createdOrder!.status.name)),
+                    Card(
+                      color: const Color(0xFFEAF5F3),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(children: [
+                              Icon(Icons.check_circle, color: Colors.green),
+                              SizedBox(width: 8),
+                              Text('Ваша заявка', style: TextStyle(fontWeight: FontWeight.w900)),
+                            ]),
+                            const SizedBox(height: 6),
+                            Text('Номер: ${_createdOrder!.id}'),
+                            Text('Статус: ${_statusLabel(_createdOrder!.status)}',
+                                style: const TextStyle(fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: _refreshingOrder || _cancellingOrder
+                                      ? null
+                                      : _refreshOrder,
+                                  icon: _refreshingOrder
+                                      ? const SizedBox(width: 16, height: 16,
+                                          child: CircularProgressIndicator(strokeWidth: 2))
+                                      : const Icon(Icons.refresh),
+                                  label: const Text('Обновить статус'),
+                                ),
+                                if (_canCancelOrder(_createdOrder!.status))
+                                  TextButton.icon(
+                                    onPressed: _refreshingOrder || _cancellingOrder
+                                        ? null
+                                        : _cancelOrder,
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    label: const Text('Отменить',
+                                        style: TextStyle(color: Colors.red)),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   if (_distanceLabel != null && _durationLabel != null)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -427,6 +473,87 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     } catch (_) { _message('Нет связи с сервером. Повторите позже.'); }
     finally { repository.close(); if (mounted) setState(() { _sendingOrder = false; _searching = false; }); }
   }
+  String _statusLabel(JibekOrderStatus status) => switch (status) {
+        JibekOrderStatus.searching => 'Ищем водителя',
+        JibekOrderStatus.accepted => 'Водитель принял заказ',
+        JibekOrderStatus.driverArriving => 'Водитель едет к вам',
+        JibekOrderStatus.inProgress => 'Поездка началась',
+        JibekOrderStatus.completed => 'Поездка завершена',
+        JibekOrderStatus.cancelled => 'Заказ отменён',
+        JibekOrderStatus.draft => 'Черновик',
+      };
+
+  bool _canCancelOrder(JibekOrderStatus status) =>
+      status == JibekOrderStatus.searching ||
+      status == JibekOrderStatus.accepted ||
+      status == JibekOrderStatus.driverArriving;
+
+  DevJibekApiRepository _orderRepository() => DevJibekApiRepository(
+        baseUrl: _apiUrl,
+        devUserIdProvider: () async => _devUserId,
+      );
+
+  Future<void> _refreshOrder() async {
+    final order = _createdOrder;
+    if (order == null || _apiUrl.isEmpty || _devUserId.isEmpty) return;
+    setState(() => _refreshingOrder = true);
+    final repository = _orderRepository();
+    try {
+      final updated = await repository.getOrder(orderId: order.id);
+      if (!mounted) return;
+      setState(() => _createdOrder = updated);
+      _message('Статус обновлён: ${_statusLabel(updated.status)}');
+    } on JibekApiException catch (e) {
+      _message('Не удалось обновить статус: ${e.message}');
+    } catch (_) {
+      _message('Нет связи с сервером. Повторите позже.');
+    } finally {
+      repository.close();
+      if (mounted) setState(() => _refreshingOrder = false);
+    }
+  }
+
+  Future<void> _cancelOrder() async {
+    final order = _createdOrder;
+    if (order == null || !_canCancelOrder(order.status)) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Отменить заявку?'),
+        content: const Text('Водитель больше не сможет принять этот заказ.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Оставить'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Отменить заказ'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _cancellingOrder = true);
+    final repository = _orderRepository();
+    try {
+      final updated = await repository.updateOrderStatus(
+        orderId: order.id,
+        status: JibekOrderStatus.cancelled,
+      );
+      if (!mounted) return;
+      setState(() => _createdOrder = updated);
+      _message('Заявка отменена');
+    } on JibekApiException catch (e) {
+      _message('Не удалось отменить заявку: ${e.message}');
+    } catch (_) {
+      _message('Нет связи с сервером. Повторите позже.');
+    } finally {
+      repository.close();
+      if (mounted) setState(() => _cancellingOrder = false);
+    }
+  }
+
   Future<void> _searchFrom() async {
     final query = _fromController.text.trim();
     if (query.isEmpty || query == 'Моё местоположение') {
