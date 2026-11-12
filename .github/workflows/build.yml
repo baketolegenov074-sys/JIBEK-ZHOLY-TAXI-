@@ -172,9 +172,9 @@ jobs:
           """
               if "create(\"release\")" not in gradle:
                   gradle = gradle.replace("android {", "android {\n" + signing_block, 1)
-              release_line = 'release {'
+              gradle = gradle.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = signingConfigs.getByName("release")', 1)
               if 'signingConfig = signingConfigs.getByName("release")' not in gradle:
-                  gradle = gradle.replace(release_line, release_line + '\n            signingConfig = signingConfigs.getByName("release")', 1)
+                  gradle = gradle.replace('release {', 'release {\n            signingConfig = signingConfigs.getByName("release")', 1)
           else:
               signing_block = """
           signingConfigs {
