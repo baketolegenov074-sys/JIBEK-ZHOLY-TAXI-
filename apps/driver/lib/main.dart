@@ -489,10 +489,10 @@ class _DriverMapPageState extends State<DriverMapPage> {
         });
         if (_online) {
           if (_services.isEmpty) {
-            setState(() => _orders = []);
-            _notice('Выберите хотя бы одну услугу');
+            _setOnline(false);
+            _notice('Выберите хотя бы одну услугу — вы отключены от линии');
           } else {
-            _refreshOrders();
+            _setOnline(true);
           }
         }
       },
