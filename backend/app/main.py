@@ -141,14 +141,14 @@ def available_orders(
     services: list[Service] = Query(...),
     x_dev_user_id: str | None = Header(default=None),
 ):
-    dev_identity(x_dev_user_id)
+    driver_id = dev_identity(x_dev_user_id)
     if not services:
         return []
     marks = ",".join("?" for _ in services)
     with connection() as db:
         rows = db.execute(
-            f"SELECT * FROM orders WHERE status='searching' AND service IN ({marks}) ORDER BY created_at",
-            tuple(services),
+            f"SELECT * FROM orders WHERE status='searching' AND passenger_id != ? AND service IN ({marks}) ORDER BY created_at",
+            (driver_id, *services),
         ).fetchall()
     return [row_to_order(row) for row in rows]
 
@@ -161,6 +161,9 @@ def accept_order(order_id: str, x_dev_user_id: str | None = Header(default=None)
         if row is None:
             db.rollback()
             raise HTTPException(404, "Заявка не найдена")
+        if row["passenger_id"] == driver_id:
+            db.rollback()
+            raise HTTPException(403, "Нельзя принять собственную заявку")
         if row["status"] != "searching":
             db.rollback()
             raise HTTPException(409, "Заявка уже принята или закрыта")
