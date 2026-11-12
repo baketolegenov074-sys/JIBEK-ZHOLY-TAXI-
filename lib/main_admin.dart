@@ -1,3 +1,3 @@
-import '../apps/owner_admin/lib/main.dart' as owner_admin;
+import 'package:jibek_owner_admin/main.dart' as owner_admin;
 
 void main() => owner_admin.main();
