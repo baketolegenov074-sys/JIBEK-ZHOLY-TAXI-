@@ -1,23 +1,29 @@
-name: Build three Flutter Android APKs
+name: JIBEK ZHOLY TAXI - Build 3 APKs
 
 on:
   push:
     branches:
+      - main
       - flutter-migration
+    tags:
+      - 'v*'
   pull_request:
     branches:
+      - main
       - flutter-migration
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-apks:
+    name: Build Android APKs
     runs-on: ubuntu-latest
     timeout-minutes: 45
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Java 17
@@ -33,105 +39,95 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install Android SDK 34
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Generate missing Flutter Android projects
+      - name: Generate Android project files
+        run: flutter create --platforms=android --org kz.jibekzholy --project-name jibek_zholy_taxi .
+
+      - name: Prepare three minimal entry points
         shell: bash
         run: |
           set -euo pipefail
-          flutter create --platforms=android --org kz.jibekzholy --project-name jibek_passenger apps/passenger
-          flutter create --platforms=android --org kz.jibekzholy --project-name jibek_driver apps/driver
-          flutter create --platforms=android --org kz.jibekzholy --project-name jibek_owner_admin apps/owner_admin
+          mkdir -p lib
 
-      - name: Pin Android build tooling (Gradle 8.7, AGP 8.6.1, Kotlin 2.0.21, SDK 35)
-        shell: bash
+          if [ ! -f lib/main_client.dart ]; then
+            cat > lib/main_client.dart <<'DART'
+          import 'package:flutter/material.dart';
+
+          void main() {
+            runApp(const MaterialApp(
+              home: Scaffold(
+                body: Center(child: Text('JIBEK ZHOLY TAXI - CLIENT')),
+              ),
+            ));
+          }
+          DART
+          fi
+
+          if [ ! -f lib/main_driver.dart ]; then
+            cat > lib/main_driver.dart <<'DART'
+          import 'package:flutter/material.dart';
+
+          void main() {
+            runApp(const MaterialApp(
+              home: Scaffold(
+                body: Center(child: Text('JIBEK ZHOLY TAXI - DRIVER')),
+              ),
+            ));
+          }
+          DART
+          fi
+
+          if [ ! -f lib/main_admin.dart ]; then
+            cat > lib/main_admin.dart <<'DART'
+          import 'package:flutter/material.dart';
+
+          void main() {
+            runApp(const MaterialApp(
+              home: Scaffold(
+                body: Center(child: Text('JIBEK ZHOLY TAXI - OWNER ADMIN')),
+              ),
+            ));
+          }
+          DART
+          fi
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build ClientTaxi.apk
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
+          flutter build apk --release -t lib/main_client.dart
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/ClientTaxi.apk
 
-          for app in ("passenger", "driver", "owner_admin"):
-              android = Path("apps") / app / "android"
-              settings_kts = android / "settings.gradle.kts"
-              settings_groovy = android / "settings.gradle"
-              app_kts = android / "app" / "build.gradle.kts"
-              app_groovy = android / "app" / "build.gradle"
-              wrapper = android / "gradle" / "wrapper" / "gradle-wrapper.properties"
-
-              settings = settings_kts if settings_kts.exists() else settings_groovy
-              app_gradle = app_kts if app_kts.exists() else app_groovy
-              if not settings.exists() or not app_gradle.exists() or not wrapper.exists():
-                  raise SystemExit(f"Android Gradle files are missing for {app}")
-
-              kotlin_dsl = settings.suffix == ".kts"
-              settings_text = settings.read_text()
-              app_text = app_gradle.read_text()
-              wrapper_text = wrapper.read_text()
-
-              android_pattern = r'id\s*\(?\s*["\']com\.android\.application["\']\s*\)?\s+version\s+["\'][^"\']+["\']'
-              kotlin_pattern = r'id\s*\(?\s*["\'](?:org\.jetbrains\.kotlin\.android|kotlin-android)["\']\s*\)?\s+version\s+["\'][^"\']+["\']'
-
-              android_replacement = 'id("com.android.application") version "8.6.1"' if kotlin_dsl else 'id "com.android.application" version "8.6.1"'
-              kotlin_replacement = 'id("org.jetbrains.kotlin.android") version "2.0.21"' if kotlin_dsl else 'id "org.jetbrains.kotlin.android" version "2.0.21"'
-
-              settings_text, android_count = re.subn(android_pattern, android_replacement, settings_text, count=1)
-              settings_text, kotlin_count = re.subn(kotlin_pattern, kotlin_replacement, settings_text, count=1)
-              if android_count != 1 or kotlin_count != 1:
-                  raise SystemExit(f"Could not pin Android/Kotlin plugin versions in {settings}")
-
-              app_text, compile_count = re.subn(r'compileSdk\s*=\s*flutter\.compileSdkVersion', 'compileSdk = 35', app_text, count=1)
-              app_text, target_count = re.subn(r'targetSdk\s*=\s*flutter\.targetSdkVersion', 'targetSdk = 35', app_text, count=1)
-              if compile_count != 1 or target_count != 1:
-                  raise SystemExit(f"Could not set compileSdk/targetSdk in {app_gradle}")
-
-              wrapper_text, wrapper_count = re.subn(
-                  r'^distributionUrl=.*$',
-                  'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip',
-                  wrapper_text,
-                  count=1,
-                  flags=re.MULTILINE,
-              )
-              if wrapper_count != 1:
-                  raise SystemExit(f"Could not pin Gradle wrapper in {wrapper}")
-
-              settings.write_text(settings_text)
-              app_gradle.write_text(app_text)
-              wrapper.write_text(wrapper_text)
-              print(f"Configured {app} ({'Kotlin DSL' if kotlin_dsl else 'Groovy DSL'})")
-          PY
-
-      - name: Build passenger APK
-        working-directory: apps/passenger
+      - name: Build DriverTaxi.apk
         run: |
-          flutter pub get
-          flutter build apk --debug
-          cp build/app/outputs/flutter-apk/app-debug.apk ../../ClientTaxi.apk
+          flutter build apk --release -t lib/main_driver.dart
+          cp build/app/outputs/flutter-apk/app-release.apk dist/DriverTaxi.apk
 
-      - name: Build driver APK
-        working-directory: apps/driver
+      - name: Build OwnerAdmin.apk
         run: |
-          flutter pub get
-          flutter build apk --debug
-          cp build/app/outputs/flutter-apk/app-debug.apk ../../DriverTaxi.apk
+          flutter build apk --release -t lib/main_admin.dart
+          cp build/app/outputs/flutter-apk/app-release.apk dist/OwnerAdmin.apk
 
-      - name: Build owner admin APK
-        working-directory: apps/owner_admin
-        run: |
-          flutter pub get
-          flutter build apk --debug
-          cp build/app/outputs/flutter-apk/app-debug.apk ../../OwnerAdmin.apk
-
-      - name: Upload three APK artifacts
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: JIBEK-ZHOLY-APKs
-          path: |
-            ClientTaxi.apk
-            DriverTaxi.apk
-            OwnerAdmin.apk
+          name: JIBEK-ZHOLY-TAXI-APKs
+          path: dist/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/ClientTaxi.apk
+            dist/DriverTaxi.apk
+            dist/OwnerAdmin.apk
+          generate_release_notes: true
