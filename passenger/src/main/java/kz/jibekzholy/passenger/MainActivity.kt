@@ -2,6 +2,12 @@ package kz.jibekzholy.passenger
 import android.app.Activity
 import android.os.Bundle
 import android.content.Context
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -88,6 +94,7 @@ class MainActivity : Activity() {
    "tire"->{field("Қызмет мекенжайы","Қай жерге келу керек?");field("Көлік маркасы","Мысалы: Hyundai");field("Қандай жұмыс керек?","Дөңгелек ауыстыру, жамау");field("Телефон нөмірі","+7",InputType.TYPE_CLASS_PHONE)}
   }
   field("Сіздің телефон нөміріңіз","+7 ___ ___ __ __",InputType.TYPE_CLASS_PHONE);b.addView(c)
+  if(fields.isNotEmpty()) b.addView(linkButton("◎ GPS АРҚЫЛЫ АЛҒАШҚЫ МЕКЕНЖАЙДЫ АНЫҚТАУ"){requestPickupLocation(fields[0].second)})
   val msg=txt("",14f,teal,true).apply{setPadding(dp(4),dp(12),dp(4),0)};b.addView(msg)
   b.addView(button("ТАПСЫРЫСТЫ РӘСІМДЕУ"){
    val missing=fields.firstOrNull{it.second.text.toString().trim().isEmpty()}
@@ -105,6 +112,32 @@ class MainActivity : Activity() {
   })
   b.addView(linkButton("← Қызметтерге оралу"){home()})
  }
+
+ private fun requestPickupLocation(target:EditText){
+  if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED &&
+     ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+   ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION),802)
+   pendingPickup=target;return
+  }
+  try{
+   val lm=getSystemService(LOCATION_SERVICE) as LocationManager
+   var best:Location?=null
+   for(provider in lm.getProviders(true)){
+    val loc=lm.getLastKnownLocation(provider)
+    if(loc!=null && (best==null || loc.accuracy<best!!.accuracy)) best=loc
+   }
+   if(best!=null) target.setText("%.5f, %.5f".format(best!!.latitude,best!!.longitude))
+   else Toast.makeText(this,"GPS қосулы, бірақ координат табылмады. Ашық жерде қайталап көріңіз.",Toast.LENGTH_LONG).show()
+  }catch(e:SecurityException){Toast.makeText(this,"Орналасу рұқсаты жоқ",Toast.LENGTH_SHORT).show()}
+ }
+ private var pendingPickup:EditText?=null
+ override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray){
+  super.onRequestPermissionsResult(requestCode,permissions,grantResults)
+  if(requestCode==802 && grantResults.isNotEmpty() && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+   pendingPickup?.let{requestPickupLocation(it)};pendingPickup=null
+  }
+ }
+
  private fun orders(){
   shell("Менің тапсырыстарым","Сақталған өтінімдер")
   val b=body();val raw=getSharedPreferences("jibek_orders",Context.MODE_PRIVATE).getString("orders","") ?: ""
