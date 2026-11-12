@@ -1,6 +1,7 @@
 """Development API for JIBEK ZHOLY. Not production-hardened yet."""
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 import threading
@@ -80,6 +81,17 @@ class OrderOut(BaseModel):
 class StatusUpdate(BaseModel):
     status: Status
 
+class DriverPresenceUpdate(BaseModel):
+    isOnline: bool
+    services: list[Service] = Field(default_factory=list)
+
+    @field_validator("services")
+    @classmethod
+    def online_requires_services(cls, value, info):
+        if info.data.get("isOnline") and not value:
+            raise ValueError("Выберите хотя бы одну услугу")
+        return list(dict.fromkeys(value))
+
 app = FastAPI(title="JIBEK ZHOLY API", version="0.1.0")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -105,6 +117,14 @@ def init_db():
         )
         """)
         db.execute("CREATE INDEX IF NOT EXISTS idx_orders_status_service ON orders(status, service)")
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS driver_presence (
+          driver_id TEXT PRIMARY KEY,
+          is_online INTEGER NOT NULL,
+          services_json TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+        """)
 
 init_db()
 
@@ -148,6 +168,31 @@ def create_order(body: OrderCreate, x_dev_user_id: str | None = Header(default=N
         )
         row = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
     return row_to_order(row)
+
+@app.put("/v1/driver/presence")
+def update_driver_presence(
+    body: DriverPresenceUpdate,
+    x_dev_user_id: str | None = Header(default=None),
+):
+    driver_id = dev_identity(x_dev_user_id)
+    updated = datetime.now(timezone.utc).isoformat()
+    with _LOCK, connection() as db:
+        db.execute(
+            """INSERT INTO driver_presence(driver_id,is_online,services_json,updated_at)
+               VALUES(?,?,?,?)
+               ON CONFLICT(driver_id) DO UPDATE SET
+                 is_online=excluded.is_online,
+                 services_json=excluded.services_json,
+                 updated_at=excluded.updated_at""",
+            (driver_id, int(body.isOnline), json.dumps(body.services), updated),
+        )
+    return {
+        "driverId": driver_id,
+        "isOnline": body.isOnline,
+        "services": body.services,
+        "updatedAt": updated,
+    }
+
 
 @app.get("/v1/driver/orders/available", response_model=list[OrderOut])
 def available_orders(
