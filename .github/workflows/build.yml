@@ -44,7 +44,30 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
+      - name: Prepare permanent Android release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/jibek-zholy-release.jks"
+          test -s "$RUNNER_TEMP/jibek-zholy-release.jks"
+          echo "Permanent signing key loaded."
+
       - name: Build three independent Android applications
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -63,6 +86,9 @@ jobs:
             (
               cd "$app_dir"
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
+
+              # Use the same permanent release key for all future updates.
+              cp "$RUNNER_TEMP/jibek-zholy-release.jks" android/app/upload-keystore.jks
 
               # Install the selected branded launcher icon for this app.
               python3 - <<'PY'
@@ -133,6 +159,34 @@ jobs:
               raise SystemExit("Android app Gradle file was not generated")
 
           gradle = gradle_file.read_text(encoding="utf-8")
+          signing_configs = '''
+          signingConfigs {
+              release {
+                  keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                  keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  storeFile file("upload-keystore.jks")
+                  storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+              }
+          }
+          '''
+          if "signingConfigs {" not in gradle:
+              gradle, inserted = re.subn(r'android\\s*\\{', lambda match: match.group(0) + "\\n" + signing_configs, gradle, count=1)
+              if inserted != 1:
+                  raise SystemExit("Could not add permanent release signing configuration")
+          gradle, replaced = re.subn(
+              r'signingConfig\\s*(?:=\\s*)?signingConfigs\\.debug',
+              'signingConfig signingConfigs.release',
+              gradle,
+          )
+          if replaced == 0:
+              gradle, inserted = re.subn(
+                  r'(buildTypes\\s*\\{\\s*release\\s*\\{)',
+                  r'\\1\\n            signingConfig signingConfigs.release',
+                  gradle,
+                  count=1,
+              )
+              if inserted != 1:
+                  raise SystemExit("Could not attach permanent key to release build")
           gradle, replacements = re.subn(
               r'(applicationId\s*(?:=\s*)?")[^"]+(")',
               lambda match: match.group(1) + application_id + match.group(2),
@@ -169,16 +223,16 @@ jobs:
           PY
 
               flutter pub get
-              flutter build apk --release
+              flutter build apk --release --build-name "1.1.$GITHUB_RUN_NUMBER" --build-number "$GITHUB_RUN_NUMBER"
             )
             cp "$app_dir/build/app/outputs/flutter-apk/app-release.apk" "dist/$output_name"
             test -s "dist/$output_name"
             echo "Created dist/$output_name"
           }
 
-          build_one apps/passenger client_taxi kz.jibekzholy.client "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk
-          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
-          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "ЖІБЕК ЖОЛЫ — Владелец" OwnerAdmin.apk
+          build_one apps/passenger client_taxi kz.jibekzholy.client2 "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk
+          build_one apps/driver driver_taxi kz.jibekzholy.driverapp2 "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
+          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin2 "ЖІБЕК ЖОЛЫ — Владелец" OwnerAdmin.apk
 
           echo "===== APK files ====="
           ls -lh dist/*.apk
