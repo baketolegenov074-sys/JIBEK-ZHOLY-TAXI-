@@ -19,6 +19,7 @@ void main() {
           '"passengerId":"passenger-1","driverId":"driver-1",'
           '"status":"inProgress","createdAt":"2026-11-12T10:00:00Z"}',
           200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
         );
       });
       final repository = DevJibekApiRepository(
