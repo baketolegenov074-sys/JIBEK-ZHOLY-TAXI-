@@ -29,11 +29,14 @@ override with `JIBEK_DB_PATH`.
 ## Current endpoints
 
 - `POST /v1/orders` — passenger creates an order.
+- `PUT /v1/driver/presence` — driver publishes online/offline status and selected services.
 - `GET /v1/driver/orders/available?services=cityTaxi&services=parcel` — driver searches compatible open orders.
 - `POST /v1/orders/{id}/accept` — atomic accept; only one driver can win.
 - `PATCH /v1/orders/{id}/status` — role-aware status transition: passengers can cancel before the trip starts; assigned drivers advance trip statuses.
 - `GET /v1/orders/{id}` — passenger or assigned driver reads the order.
 - `GET /v1/driver/orders/active` — restore the driver's active order after reopening the app.
+
+Driver online status and service preferences are persisted by the development API. This is not yet a full dispatch/heartbeat system; stale online sessions need expiry before production.
 
 A driver cannot accept another order while an accepted, arriving or in-progress order is active.
 
