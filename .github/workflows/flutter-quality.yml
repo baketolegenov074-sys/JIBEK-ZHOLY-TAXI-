@@ -10,6 +10,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  shared-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install shared dependencies
+        working-directory: packages/jibek_shared
+        run: flutter pub get
+      - name: Run shared model tests
+        working-directory: packages/jibek_shared
+        run: flutter test
+      - name: Analyze shared package
+        working-directory: packages/jibek_shared
+        run: flutter analyze
+
   analyze:
     runs-on: ubuntu-latest
     strategy:
