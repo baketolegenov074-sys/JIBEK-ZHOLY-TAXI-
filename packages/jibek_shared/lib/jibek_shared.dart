@@ -98,15 +98,7 @@ class JibekTheme {
         backgroundColor: navy,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      chipTheme: scheme.copyWith(
-        secondary: gold,
-      ).chipTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-        side: const BorderSide(color: Color(0xFFE4EAF4)),
-        selectedColor: const Color(0xFFFFEFC5),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700, color: ink),
-      ),
-    );
+);
   }
 }
 
