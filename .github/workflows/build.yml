@@ -62,6 +62,26 @@ jobs:
               cd "$app_dir"
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
 
+              # Keep the Android Kotlin compiler compatible with current Flutter plugins.
+              python3 - <<'PY'
+          import pathlib
+          import re
+
+          settings = pathlib.Path("android/settings.gradle")
+          if not settings.exists():
+              settings = pathlib.Path("android/settings.gradle.kts")
+          if not settings.exists():
+              raise SystemExit("Android settings.gradle was not generated")
+
+          source = settings.read_text(encoding="utf-8")
+          pattern = r'(id\s*\(?\s*["\']org\.jetbrains\.kotlin\.android["\']\s*\)?\s*version\s*["\'])[^"\']+(["\'])'
+          updated, count = re.subn(pattern, r'\g<1>2.2.0\g<2>', source, count=1)
+          if count != 1:
+              raise SystemExit("Could not update Kotlin Gradle plugin version")
+          settings.write_text(updated, encoding="utf-8")
+          print("Configured Kotlin Gradle plugin: 2.2.0")
+          PY
+
               python3 - "$application_id" "$app_label" <<'PY'
           import pathlib
           import re
