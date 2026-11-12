@@ -164,6 +164,13 @@ def accept_order(order_id: str, x_dev_user_id: str | None = Header(default=None)
         if row["passenger_id"] == driver_id:
             db.rollback()
             raise HTTPException(403, "Нельзя принять собственную заявку")
+        active = db.execute(
+            "SELECT id FROM orders WHERE driver_id=? AND status IN ('accepted','driverArriving','inProgress') LIMIT 1",
+            (driver_id,),
+        ).fetchone()
+        if active is not None:
+            db.rollback()
+            raise HTTPException(409, "Сначала завершите текущий заказ")
         if row["status"] != "searching":
             db.rollback()
             raise HTTPException(409, "Заявка уже принята или закрыта")
@@ -202,6 +209,17 @@ def update_status(order_id: str, body: StatusUpdate, x_dev_user_id: str | None =
         updated = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
         db.commit()
     return row_to_order(updated)
+
+@app.get("/v1/driver/orders/active", response_model=OrderOut | None)
+def active_driver_order(x_dev_user_id: str | None = Header(default=None)):
+    driver_id = dev_identity(x_dev_user_id)
+    with connection() as db:
+        row = db.execute(
+            "SELECT * FROM orders WHERE driver_id=? AND status IN ('accepted','driverArriving','inProgress') ORDER BY created_at LIMIT 1",
+            (driver_id,),
+        ).fetchone()
+    return row_to_order(row) if row is not None else None
+
 
 @app.get("/v1/orders/{order_id}", response_model=OrderOut)
 def get_order(order_id: str, x_dev_user_id: str | None = Header(default=None)):
