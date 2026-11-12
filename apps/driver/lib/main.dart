@@ -306,11 +306,16 @@ class _DriverMapPageState extends State<DriverMapPage> {
     child: Padding(
       padding: const EdgeInsets.all(14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(order.service.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+        Text(_serviceLabel(order.service), style: const TextStyle(fontWeight: FontWeight.w900)),
         const SizedBox(height: 7),
         Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
         Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
         if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
+        if (order.note != null && order.note!.trim().isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text('Комментарий: ' + order.note!,
+              style: const TextStyle(color: Color(0xFF687386))),
+        ],
         const SizedBox(height: 10),
         SizedBox(width: double.infinity, child: FilledButton(
           onPressed: () => _acceptOrder(order),
@@ -354,6 +359,21 @@ class _DriverMapPageState extends State<DriverMapPage> {
     }
   }
 
+  String _serviceLabel(JibekServiceType service) {
+    switch (service) {
+      case JibekServiceType.cityTaxi:
+        return 'Городское такси';
+      case JibekServiceType.intercity:
+        return 'Межгород';
+      case JibekServiceType.parcel:
+        return 'Доставка посылки';
+      case JibekServiceType.towTruck:
+        return 'Эвакуатор';
+      case JibekServiceType.mobileTire:
+        return 'Выездной шиномонтаж';
+    }
+  }
+
   String _statusLabel(JibekOrderStatus status) {
     switch (status) {
       case JibekOrderStatus.accepted: return 'Заказ принят';
@@ -374,9 +394,16 @@ class _DriverMapPageState extends State<DriverMapPage> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF16834A))),
           const SizedBox(height: 6),
+          Text(_serviceLabel(order.service),
+              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+          const SizedBox(height: 4),
           Text(_statusLabel(order.status), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
           Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
+          if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
+          if (order.note != null && order.note!.trim().isNotEmpty)
+            Text('Комментарий: ' + order.note!,
+                style: const TextStyle(color: Color(0xFF687386))),
           if (next != null) ...[
             const SizedBox(height: 10),
             SizedBox(width: double.infinity, child: FilledButton(
