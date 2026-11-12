@@ -32,7 +32,7 @@ override with `JIBEK_DB_PATH`.
 - `GET /v1/driver/orders/available?services=cityTaxi&services=parcel` — driver searches compatible open orders.
 - `POST /v1/orders/{id}/accept` — atomic accept; only one driver can win.
 - `PATCH /v1/orders/{id}/status` — role-aware status transition: passengers can cancel before the trip starts; assigned drivers advance trip statuses.
-- `GET /v1/orders/{id}` — passenger or assigned driver reads the order.
+- `GET /v1/orders/{id}` — passenger or assigned driver reads the order.\n- `GET /v1/driver/orders/active` — restore the driver's active order after reopening the app.\n\nA driver cannot accept another order while an accepted, arriving or in-progress order is active.
 
 The current `X-Dev-User-Id` identity is still a development shim; it does not establish passenger/driver roles or verify a driver's eligibility. Do not expose these endpoints to the public internet. No real
 SMS login, payments, push notifications, live GPS or production dispatch exists.
