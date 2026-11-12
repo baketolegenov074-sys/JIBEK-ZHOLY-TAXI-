@@ -20,12 +20,13 @@ Flutter migration is developed on `flutter-migration`. The original Kotlin modul
 | Passenger service selection | City taxi, intercity, parcel, tow truck and mobile tire request types; notes field for service details |
 | Passenger order recovery after app restart | Saves order ID locally and restores current server status when API access is configured |
 | Passenger cancellation before trip start | API and passenger UI implemented; requires configured backend |
+| Driver online/offline status and selected services | Saved through the development API; no heartbeat/expiry yet |
 | Driver accounts and verification | Not connected |
 | Live driver location sharing | Not connected |
 | Pricing, payments and receipts | Not connected |
 | Parcel, tow and mobile tire workflows | Driver service filters exist; dedicated order forms and workflows remain to be built |
 
-The driver online switch is local UI state only; it does not publish availability to a server. Route preview is not a fare quote and does not create a trip. Nominatim and the OSRM demo endpoint are public services without a production SLA; production launch needs an appropriate service plan and usage-policy compliance.
+The driver online switch publishes the driver's online/offline state and selected services to the development API. This is not yet a production dispatch heartbeat; stale-session expiry remains to be implemented. Route preview is not a fare quote and does not create a trip. Nominatim and the OSRM demo endpoint are public services without a production SLA; production launch needs an appropriate service plan and usage-policy compliance.
 
 Location is requested only after the user taps the location control. No background tracking is enabled.
 
