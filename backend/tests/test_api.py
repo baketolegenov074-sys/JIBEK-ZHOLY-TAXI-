@@ -60,3 +60,30 @@ def test_status_transition_and_access_control(client):
         headers=HEAD_D,
     )
     assert arriving.status_code == 200
+
+
+def test_passenger_can_cancel_but_cannot_advance_driver_status(client):
+    order_id = client.post("/v1/orders", json=ORDER, headers=HEAD_P).json()["id"]
+    client.post(f"/v1/orders/{order_id}/accept", headers=HEAD_D)
+    denied = client.patch(
+        f"/v1/orders/{order_id}/status",
+        json={"status": "driverArriving"},
+        headers=HEAD_P,
+    )
+    assert denied.status_code == 409
+    cancelled = client.patch(
+        f"/v1/orders/{order_id}/status",
+        json={"status": "cancelled"},
+        headers=HEAD_P,
+    )
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+
+
+def test_unrelated_user_cannot_read_order(client):
+    order_id = client.post("/v1/orders", json=ORDER, headers=HEAD_P).json()["id"]
+    response = client.get(
+        f"/v1/orders/{order_id}",
+        headers={"X-Dev-User-Id": "someone-else"},
+    )
+    assert response.status_code == 403
