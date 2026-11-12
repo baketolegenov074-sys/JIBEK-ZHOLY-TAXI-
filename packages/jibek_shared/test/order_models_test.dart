@@ -45,6 +45,41 @@ void main() {
       expect(order.validate(), contains('совпадают'));
     });
 
+    test('requires service details for parcel, tow truck and mobile tire', () {
+      for (final service in [
+        JibekServiceType.parcel,
+        JibekServiceType.towTruck,
+        JibekServiceType.mobileTire,
+      ]) {
+        final order = JibekOrderRequest(
+          id: 'details-required',
+          service: service,
+          pickup: pickup,
+          destination: destination,
+          createdAt: DateTime.utc(2026, 11, 12),
+        );
+        expect(order.validate(), isNotNull);
+      }
+    });
+
+    test('accepts service details for parcel, tow truck and mobile tire', () {
+      for (final service in [
+        JibekServiceType.parcel,
+        JibekServiceType.towTruck,
+        JibekServiceType.mobileTire,
+      ]) {
+        final order = JibekOrderRequest(
+          id: 'details-present',
+          service: service,
+          pickup: pickup,
+          destination: destination,
+          createdAt: DateTime.utc(2026, 11, 12),
+          note: 'Подробности заявки',
+        );
+        expect(order.validate(), isNull);
+      }
+    });
+
     test('requires vehicle class for city taxi', () {
       final order = JibekOrderRequest(
         id: 'test-order-3',
