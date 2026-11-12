@@ -34,7 +34,7 @@ class MainActivity : Activity() {
  override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState)
   window.statusBarColor=navy;window.navigationBarColor=Color.WHITE
   window.decorView.systemUiVisibility=View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-  val sc=ScrollView(this);page=LinearLayout(this).apply{orientation=1;setPadding(dp(18),dp(22),dp(18),dp(30));setBackgroundColor(paper)}
+  val sc=ScrollView(this).apply{fillViewport=true;clipToPadding=false;isVerticalScrollBarEnabled=false};page=LinearLayout(this).apply{orientation=1;setPadding(dp(16),dp(16),dp(16),dp(36));setBackgroundColor(paper)}
   sc.addView(page);setContentView(sc);render()
  }
  private fun render(){
@@ -125,10 +125,10 @@ class MainActivity : Activity() {
   }else toast("Рұқсат берілмеді")
  }
  private fun saveState(){getSharedPreferences("driver_profile",Context.MODE_PRIVATE).edit().putBoolean("online",online).apply()}
- private fun field(h:String,type:Int=android.text.InputType.TYPE_CLASS_TEXT)=EditText(this).apply{hint=h;inputType=type;textSize=15f;setSingleLine(true);setTextColor(ink);background=rounded(Color.rgb(248,250,252),10,Color.rgb(218,225,232));setPadding(dp(12),dp(10),dp(12),dp(10));layoutParams=LinearLayout.LayoutParams(-1,dp(50)).apply{bottomMargin=dp(8)}}
- private fun label(s:String)=txt(s,13f,muted,true).apply{setPadding(0,dp(8),0,dp(4))}
+ private fun field(h:String,type:Int=android.text.InputType.TYPE_CLASS_TEXT)=EditText(this).apply{hint=h;inputType=type;textSize=16f;includeFontPadding=true;minHeight=dp(56);setSingleLine(true);setTextColor(ink);gravity=Gravity.CENTER_VERTICAL;background=rounded(Color.rgb(248,250,252),10,Color.rgb(218,225,232));setPadding(dp(14),dp(12),dp(14),dp(12));layoutParams=LinearLayout.LayoutParams(-1,dp(58)).apply{bottomMargin=dp(10)}}
+ private fun label(s:String)=txt(s,13f,muted,true).apply{includeFontPadding=true;minHeight=dp(28);gravity=Gravity.CENTER_VERTICAL;setPadding(0,dp(6),0,dp(4));setLineSpacing(dp(2),1f)}
  private fun card()=LinearLayout(this).apply{orientation=1;setPadding(dp(16),dp(16),dp(16),dp(16));background=rounded(Color.WHITE,17);elevation=dp(2).toFloat();layoutParams=LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(12)}}
- private fun txt(s:String,size:Float,color:Int,bold:Boolean)=TextView(this).apply{text=s;textSize=size;setTextColor(color);if(bold)setTypeface(typeface,Typeface.BOLD)}
+ private fun txt(s:String,size:Float,color:Int,bold:Boolean)=TextView(this).apply{text=s;textSize=size;setTextColor(color);includeFontPadding=true;setLineSpacing(dp(2),1f);if(bold)setTypeface(typeface,Typeface.BOLD)}
  private fun actionButton(s:String,action:()->Unit)=TextView(this).apply{text=s;textSize=12f;gravity=Gravity.CENTER;setTextColor(navy);typeface=Typeface.DEFAULT_BOLD;background=rounded(gold,10);setPadding(dp(12),dp(12),dp(12),dp(12));setOnClickListener{action()}}
  private fun rounded(color:Int,r:Int,stroke:Int?=null)=GradientDrawable().apply{setColor(color);cornerRadius=dp(r).toFloat();if(stroke!=null)setStroke(dp(1),stroke)}
  private fun dp(v:Int)=(v*resources.displayMetrics.density).toInt()
