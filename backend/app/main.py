@@ -177,6 +177,19 @@ def update_driver_presence(
     driver_id = dev_identity(x_dev_user_id)
     updated = datetime.now(timezone.utc).isoformat()
     with _LOCK, connection() as db:
+        if not body.isOnline:
+            active_order = db.execute(
+                """SELECT id FROM orders
+                   WHERE driver_id=?
+                     AND status IN ('accepted','driverArriving','inProgress')
+                   LIMIT 1""",
+                (driver_id,),
+            ).fetchone()
+            if active_order is not None:
+                raise HTTPException(
+                    409,
+                    "Завершите текущий заказ перед отключением от линии",
+                )
         db.execute(
             """INSERT INTO driver_presence(driver_id,is_online,services_json,updated_at)
                VALUES(?,?,?,?)
