@@ -65,13 +65,11 @@ jobs:
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
 
               # Install the selected branded launcher icon for this app.
-              python3 - "$app_dir" <<'PY'
+              python3 - <<'PY'
           import pathlib
           import subprocess
-          import sys
 
-          app_dir = pathlib.Path(sys.argv[1])
-          source = app_dir / "assets" / "launcher.svg"
+          source = pathlib.Path("assets") / "launcher.svg"
           if not source.is_file():
               raise SystemExit(f"Missing launcher artwork: {source}")
           res = pathlib.Path("android/app/src/main/res")
