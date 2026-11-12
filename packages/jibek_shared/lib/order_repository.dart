@@ -1,6 +1,10 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
 import 'order_models.dart';
 
-/// API boundary. A production implementation must use verified user tokens.
+/// API boundary. Implementations must use verified user identity.
 abstract interface class JibekOrderRepository {
   Future<JibekOrderRequest> createOrder(JibekOrderRequest request);
 
@@ -15,4 +19,161 @@ abstract interface class JibekOrderRepository {
     required String orderId,
     required JibekOrderStatus status,
   });
+}
+
+/// Development-only adapter for the current API identity shim.
+///
+/// The server currently trusts X-Dev-User-Id. Never ship this adapter in a
+/// public release. Replace it with a verified JWT/OIDC implementation first.
+class DevJibekApiRepository implements JibekOrderRepository {
+  DevJibekApiRepository({
+    required String baseUrl,
+    required Future<String> Function() devUserIdProvider,
+    http.Client? client,
+  })  : _baseUri = Uri.parse(baseUrl),
+        _devUserIdProvider = devUserIdProvider,
+        _client = client ?? http.Client();
+
+  final Uri _baseUri;
+  final Future<String> Function() _devUserIdProvider;
+  final http.Client _client;
+
+  Map<String, String> get _baseHeaders => {
+        'Content-Type': 'application/json',
+      };
+
+  Future<Map<String, String>> _headers() async {
+    final userId = (await _devUserIdProvider()).trim();
+    if (userId.isEmpty) {
+      throw const JibekApiException('Не задан тестовый пользователь');
+    }
+    return {..._baseHeaders, 'X-Dev-User-Id': userId};
+  }
+
+  Uri _uri(String path, [Map<String, String>? query]) =>
+      _baseUri.resolve(path).replace(queryParameters: query);
+
+  Future<Map<String, Object?>> _send(
+    Future<http.Response> Function(Map<String, String>) request,
+  ) async {
+    final response = await request(await _headers());
+    final Object? decoded =
+        response.body.isEmpty ? null : jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = decoded is Map ? decoded['detail'] : null;
+      throw JibekApiException(
+        detail?.toString() ?? 'Ошибка сервера (${response.statusCode})',
+        statusCode: response.statusCode,
+      );
+    }
+    if (decoded is! Map) {
+      throw const JibekApiException('Сервер вернул неверный формат');
+    }
+    return Map<String, Object?>.from(decoded);
+  }
+
+  JibekOrderRequest _orderFromApi(Map<String, Object?> json) =>
+      JibekOrderRequest(
+        id: json['id'] as String,
+        service: JibekServiceType.values.byName(json['service'] as String),
+        pickup: JibekGeoPoint.fromJson(
+          Map<String, Object?>.from(json['pickup'] as Map),
+        ),
+        destination: JibekGeoPoint.fromJson(
+          Map<String, Object?>.from(json['destination'] as Map),
+        ),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        vehicleClass: json['vehicleClass'] as String?,
+        note: json['note'] as String?,
+        passengerId: json['passengerId'] as String?,
+        status: JibekOrderStatus.values.byName(json['status'] as String),
+      );
+
+  Map<String, Object?> _createPayload(JibekOrderRequest order) => {
+        'service': order.service.name,
+        'pickup': order.pickup.toJson(),
+        'destination': order.destination.toJson(),
+        if (order.vehicleClass != null) 'vehicleClass': order.vehicleClass,
+        if (order.note != null) 'note': order.note,
+      };
+
+  @override
+  Future<JibekOrderRequest> createOrder(JibekOrderRequest request) async {
+    final json = await _send(
+      (headers) => _client.post(
+        _uri('/v1/orders'),
+        headers: headers,
+        body: jsonEncode(_createPayload(request)),
+      ),
+    );
+    return _orderFromApi(json);
+  }
+
+  @override
+  Future<List<JibekOrderRequest>> getAvailableOrders({
+    required String driverId,
+    required Set<JibekServiceType> services,
+  }) async {
+    if (services.isEmpty) return [];
+    final query = <String, String>{
+      for (var i = 0; i < services.length; i++)
+        'services': services.elementAt(i).name,
+    };
+    final response = await _client.get(
+      _uri('/v1/driver/orders/available', query),
+      headers: await _headers(),
+    );
+    final Object? decoded = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = decoded is Map ? decoded['detail'] : null;
+      throw JibekApiException(
+        detail?.toString() ?? 'Ошибка сервера (${response.statusCode})',
+        statusCode: response.statusCode,
+      );
+    }
+    if (decoded is! List) {
+      throw const JibekApiException('Сервер вернул неверный список заявок');
+    }
+    return decoded
+        .map((item) => _orderFromApi(Map<String, Object?>.from(item as Map)))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<JibekOrderRequest> acceptOrder({required String orderId}) async {
+    final json = await _send(
+      (headers) => _client.post(
+        _uri('/v1/orders/$orderId/accept'),
+        headers: headers,
+      ),
+    );
+    return _orderFromApi(json);
+  }
+
+  @override
+  Future<JibekOrderRequest> updateOrderStatus({
+    required String orderId,
+    required JibekOrderStatus status,
+  }) async {
+    final json = await _send(
+      (headers) => _client.patch(
+        _uri('/v1/orders/$orderId/status'),
+        headers: headers,
+        body: jsonEncode({'status': status.name}),
+      ),
+    );
+    return _orderFromApi(json);
+  }
+
+  void close() => _client.close();
+}
+
+class JibekApiException implements Exception {
+  const JibekApiException(this.message, {this.statusCode});
+
+  final String message;
+  final int? statusCode;
+
+  @override
+  String toString() => message;
 }
