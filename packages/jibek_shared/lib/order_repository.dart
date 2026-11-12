@@ -8,6 +8,8 @@ import 'order_models.dart';
 abstract interface class JibekOrderRepository {
   Future<JibekOrderRequest> createOrder(JibekOrderRequest request);
 
+  Future<JibekOrderRequest> getOrder({required String orderId});
+
   Future<List<JibekOrderRequest>> getAvailableOrders({
     required Set<JibekServiceType> services,
   });
@@ -103,6 +105,17 @@ class DevJibekApiRepository implements JibekOrderRepository {
         _uri('/v1/orders'),
         headers: headers,
         body: jsonEncode(_createPayload(request)),
+      ),
+    );
+    return _orderFromApi(json);
+  }
+
+  @override
+  Future<JibekOrderRequest> getOrder({required String orderId}) async {
+    final json = await _send(
+      (headers) => _client.get(
+        _uri('/v1/orders/$orderId'),
+        headers: headers,
       ),
     );
     return _orderFromApi(json);
