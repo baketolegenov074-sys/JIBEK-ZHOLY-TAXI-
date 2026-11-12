@@ -72,6 +72,13 @@ jobs:
         run: |
           set -euo pipefail
           set +x
+          EXPECTED_STORE_PASSWORD_SHA256="264d313394a87ec113836c061b2c4cd5ff227fbc290e800f24ed3f12aab77df8"
+          ACTUAL_STORE_PASSWORD_SHA256="$(printf '%s' "$ANDROID_KEYSTORE_PASSWORD" | sha256sum | cut -d ' ' -f 1)"
+          if [ "$ACTUAL_STORE_PASSWORD_SHA256" != "$EXPECTED_STORE_PASSWORD_SHA256" ]; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not match the verified archive password (value hidden)."
+            exit 10
+          fi
+          echo "STORE_PASSWORD_MATCH: yes (value hidden)"
           cat > "$RUNNER_TEMP/VerifySigningKey.java" <<'JAVA'
           import java.io.FileInputStream;
           import java.security.Key;
