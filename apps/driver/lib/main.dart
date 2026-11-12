@@ -273,8 +273,24 @@ class _DriverMapPageState extends State<DriverMapPage> {
     setState(() => _loadingOrders = true);
     final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
     try {
-      final orders = await repository.getAvailableOrders(services: _selectedServices);
-      if (mounted) setState(() => _orders = orders);
+      final active = await repository.getActiveDriverOrder();
+      if (active != null) {
+        if (mounted) {
+          setState(() {
+            _activeOrder = active;
+            _orders = [];
+          });
+        }
+      } else {
+        final orders =
+            await repository.getAvailableOrders(services: _selectedServices);
+        if (mounted) {
+          setState(() {
+            _activeOrder = null;
+            _orders = orders;
+          });
+        }
+      }
     } on JibekApiException catch (e) {
       _notice('Ошибка загрузки: ' + e.message);
     } catch (_) {
