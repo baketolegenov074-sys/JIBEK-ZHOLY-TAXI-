@@ -26,7 +26,7 @@ class MainActivity : Activity() {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
 
         val scroll = ScrollView(this).apply {
-            fillViewport = true
+            isFillViewport = true
             setBackgroundColor(pageColor)
             clipToPadding = false
         }
