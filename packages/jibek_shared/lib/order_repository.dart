@@ -1,7 +1,6 @@
 import 'order_models.dart';
 
-/// API boundary. A production implementation must call the authenticated
-/// backend; the mobile apps must never treat a local stub as a live dispatch.
+/// API boundary. A production implementation must use verified user tokens.
 abstract interface class JibekOrderRepository {
   Future<JibekOrderRequest> createOrder(JibekOrderRequest request);
 
@@ -9,6 +8,8 @@ abstract interface class JibekOrderRepository {
     required String driverId,
     required Set<JibekServiceType> services,
   });
+
+  Future<JibekOrderRequest> acceptOrder({required String orderId});
 
   Future<JibekOrderRequest> updateOrderStatus({
     required String orderId,
