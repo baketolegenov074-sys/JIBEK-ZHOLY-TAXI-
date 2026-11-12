@@ -10,6 +10,8 @@ abstract interface class JibekOrderRepository {
 
   Future<JibekOrderRequest> getOrder({required String orderId});
 
+  Future<JibekOrderRequest?> getActiveDriverOrder();
+
   Future<List<JibekOrderRequest>> getAvailableOrders({
     required Set<JibekServiceType> services,
   });
@@ -108,6 +110,29 @@ class DevJibekApiRepository implements JibekOrderRepository {
       ),
     );
     return _orderFromApi(json);
+  }
+
+  @override
+  Future<JibekOrderRequest?> getActiveDriverOrder() async {
+    final response = await _client.get(
+      _uri('/v1/driver/orders/active'),
+      headers: await _headers(),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final Object? decoded =
+          response.body.isEmpty ? null : jsonDecode(response.body);
+      final detail = decoded is Map ? decoded['detail'] : null;
+      throw JibekApiException(
+        detail?.toString() ?? 'Ошибка сервера (${response.statusCode})',
+        statusCode: response.statusCode,
+      );
+    }
+    if (response.body.trim() == 'null' || response.body.isEmpty) return null;
+    final Object? decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const JibekApiException('Сервер вернул неверный формат заказа');
+    }
+    return _orderFromApi(Map<String, Object?>.from(decoded));
   }
 
   @override
