@@ -36,7 +36,7 @@ class OrderCreate(BaseModel):
     service: Service
     pickup: Point
     destination: Point
-    vehicleClass: str | None = Field(default=None, max_length=40)
+    vehicleClass: str | None = Field(default=None, max_length=40, validate_default=True)
     note: str | None = Field(default=None, max_length=500)
 
     @field_validator("vehicleClass")
