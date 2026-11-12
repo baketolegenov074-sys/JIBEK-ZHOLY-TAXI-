@@ -167,3 +167,30 @@ def test_assistance_services_require_details(client, service, note):
         headers=HEAD_P,
     )
     assert valid.status_code == 201
+
+
+
+def test_driver_presence_requires_services_and_persists_state(client):
+    missing = client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": []},
+        headers=HEAD_D,
+    )
+    assert missing.status_code == 422
+
+    online = client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": ["cityTaxi", "parcel"]},
+        headers=HEAD_D,
+    )
+    assert online.status_code == 200
+    assert online.json()["isOnline"] is True
+    assert online.json()["services"] == ["cityTaxi", "parcel"]
+
+    offline = client.put(
+        "/v1/driver/presence",
+        json={"isOnline": False, "services": []},
+        headers=HEAD_D,
+    )
+    assert offline.status_code == 200
+    assert offline.json()["isOnline"] is False
