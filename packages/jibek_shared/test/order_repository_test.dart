@@ -4,27 +4,6 @@ import 'package:http/testing.dart';
 import 'package:jibek_shared/jibek_shared.dart';
 
 void main() {
-  const orderJson = <String, Object?>{
-    'id': 'order-123',
-    'service': 'cityTaxi',
-    'pickup': {
-      'latitude': 42.3154,
-      'longitude': 69.5869,
-      'address': 'Шымкент',
-    },
-    'destination': {
-      'latitude': 42.32,
-      'longitude': 69.60,
-      'address': 'Центр',
-    },
-    'vehicleClass': 'Эконом',
-    'note': null,
-    'passengerId': 'passenger-1',
-    'driverId': 'driver-1',
-    'status': 'inProgress',
-    'createdAt': '2026-11-12T10:00:00Z',
-  };
-
   group('DevJibekApiRepository active driver order', () {
     test('restores active order and sends development identity header', () async {
       late http.Request captured;
