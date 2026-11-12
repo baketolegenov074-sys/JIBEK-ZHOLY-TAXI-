@@ -42,12 +42,14 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   final TextEditingController _fromController =
       TextEditingController(text: 'Моё местоположение');
   final TextEditingController _toController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
   final LatLng _shymkent = const LatLng(42.3154, 69.5869);
 
   LatLng? _fromPoint;
   LatLng? _toPoint;
   List<LatLng> _route = [];
   String _class = 'Эконом';
+  JibekServiceType _service = JibekServiceType.cityTaxi;
   String? _distanceLabel;
   String? _durationLabel;
   bool _locating = false;
@@ -69,6 +71,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   void dispose() {
     _fromController.dispose();
     _toController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -145,7 +148,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     }
     setState(() => _searching = true);
     try {
-      final result = await _geocode('$query, Шымкент, Казахстан');
+      final result = await _geocode('$query, Казахстан');
       if (result == null) {
         _message('Адрес не найден. Уточните название или улицу.');
         return;
@@ -407,7 +410,27 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       ]),
                     ),
                   const SizedBox(height: 8),
-                  const Text('Класс автомобиля', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
+                  const Text('Что вам нужно?', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      (JibekServiceType.cityTaxi, 'Городское такси'),
+                      (JibekServiceType.intercity, 'Межгород'),
+                      (JibekServiceType.parcel, 'Посылка'),
+                      (JibekServiceType.towTruck, 'Эвакуатор'),
+                      (JibekServiceType.mobileTire, 'Шиномонтаж'),
+                    ].map((item) => ChoiceChip(
+                      label: Text(item.$2),
+                      selected: _service == item.$1,
+                      onSelected: (_) => setState(() => _service = item.$1),
+                      selectedColor: const Color(0xFFE8D5AC),
+                    )).toList(),
+                  ),
+                  if (_service == JibekServiceType.cityTaxi) ...[
+                    const SizedBox(height: 8),
+                    const Text('Класс автомобиля', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
                   const SizedBox(height: 9),
                   Wrap(
                     spacing: 8,
@@ -419,6 +442,24 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF10243A) : const Color(0xFF657184)),
                       side: BorderSide(color: _class == item ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
                     )).toList(),
+                  ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _noteController,
+                    maxLines: 2,
+                    maxLength: 500,
+                    decoration: InputDecoration(
+                      labelText: _service == JibekServiceType.parcel
+                          ? 'Что нужно доставить?'
+                          : _service == JibekServiceType.towTruck
+                              ? 'Опишите автомобиль и поломку'
+                              : _service == JibekServiceType.mobileTire
+                                  ? 'Укажите размер колёс и проблему'
+                                  : 'Комментарий водителю',
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -464,10 +505,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
     try {
       final draft = JibekOrderRequest(
-        id: 'local-draft', service: JibekServiceType.cityTaxi,
+        id: 'local-draft', service: _service,
         pickup: JibekGeoPoint(latitude: _fromPoint!.latitude, longitude: _fromPoint!.longitude, address: _fromController.text),
         destination: JibekGeoPoint(latitude: _toPoint!.latitude, longitude: _toPoint!.longitude, address: _toController.text),
-        createdAt: DateTime.now(), vehicleClass: _class,
+        createdAt: DateTime.now(),
+        vehicleClass: _service == JibekServiceType.cityTaxi ? _class : null,
+        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
       final validation = draft.validate();
       if (validation != null) { _message(validation); return; }
