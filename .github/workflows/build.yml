@@ -49,6 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
 
           build_one() {
             local app_dir="$1"
@@ -61,6 +63,42 @@ jobs:
             (
               cd "$app_dir"
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
+
+              # Install the selected branded launcher icon for this app.
+              python3 - "$app_dir" <<'PY'
+          import pathlib
+          import subprocess
+          import sys
+
+          app_dir = pathlib.Path(sys.argv[1])
+          source = app_dir / "assets" / "launcher.svg"
+          if not source.is_file():
+              raise SystemExit(f"Missing launcher artwork: {source}")
+          res = pathlib.Path("android/app/src/main/res")
+          sizes = {
+              "mipmap-mdpi": 48,
+              "mipmap-hdpi": 72,
+              "mipmap-xhdpi": 96,
+              "mipmap-xxhdpi": 144,
+              "mipmap-xxxhdpi": 192,
+          }
+          for folder, size in sizes.items():
+              target_dir = res / folder
+              target_dir.mkdir(parents=True, exist_ok=True)
+              for name in ("ic_launcher.png", "ic_launcher_round.png"):
+                  target = target_dir / name
+                  subprocess.run(
+                      ["rsvg-convert", "-w", str(size), "-h", str(size),
+                       "-o", str(target), str(source)],
+                      check=True,
+                  )
+          # Disable generated adaptive-icon XML so Android uses the custom density PNGs.
+          adaptive = res / "mipmap-anydpi-v26"
+          if adaptive.exists():
+              for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
+                  (adaptive / name).unlink(missing_ok=True)
+          print(f"Installed branded launcher icons from {source}")
+          PY
 
               # Keep the Android Kotlin compiler compatible with current Flutter plugins.
               python3 - <<'PY'
