@@ -171,18 +171,10 @@ jobs:
           }
           """
               if "create(\"release\")" not in gradle:
-                  gradle, inserted = re.subn(r"android\\s*\\{", lambda match: match.group(0) + "\\n" + signing_block, gradle, count=1)
-                  if inserted != 1:
-                      raise SystemExit("Could not add Kotlin release signing configuration")
-              if "signingConfigs.getByName(\"release\")" not in gradle:
-                  gradle, inserted = re.subn(
-                      r'(getByName\\("release"\\)\\s*\\{)',
-                      r'\\1\\n            signingConfig = signingConfigs.getByName("release")',
-                      gradle,
-                      count=1,
-                  )
-                  if inserted != 1:
-                      raise SystemExit("Could not attach Kotlin release signing configuration")
+                  gradle = gradle.replace("android {", "android {\\n" + signing_block, 1)
+              release_line = 'release {'
+              if 'signingConfig = signingConfigs.getByName("release")' not in gradle:
+                  gradle = gradle.replace(release_line, release_line + '\\n            signingConfig = signingConfigs.getByName("release")', 1)
           else:
               signing_block = """
           signingConfigs {
@@ -195,23 +187,12 @@ jobs:
           }
           """
               if "signingConfigs {" not in gradle:
-                  gradle, inserted = re.subn(r"android\\s*\\{", lambda match: match.group(0) + "\\n" + signing_block, gradle, count=1)
-                  if inserted != 1:
-                      raise SystemExit("Could not add Groovy release signing configuration")
-              gradle, replaced = re.subn(
-                  r"signingConfig\\s*(?:=\\s*)?signingConfigs\\.debug",
-                  "signingConfig signingConfigs.release",
-                  gradle,
-              )
-              if replaced == 0:
-                  gradle, inserted = re.subn(
-                      r"(buildTypes\\s*\\{\\s*release\\s*\\{)",
-                      r"\\1\\n            signingConfig signingConfigs.release",
-                      gradle,
-                      count=1,
-                  )
-                  if inserted != 1:
-                      raise SystemExit("Could not attach Groovy release signing configuration")
+                  gradle = gradle.replace("android {", "android {\\n" + signing_block, 1)
+              if "signingConfig signingConfigs.release" not in gradle:
+                  if "signingConfig signingConfigs.debug" in gradle:
+                      gradle = gradle.replace("signingConfig signingConfigs.debug", "signingConfig signingConfigs.release", 1)
+                  else:
+                      gradle = gradle.replace("release {", "release {\\n            signingConfig signingConfigs.release", 1)
           gradle, replacements = re.subn(
               r'(applicationId\s*(?:=\s*)?")[^"]+(")',
               lambda match: match.group(1) + application_id + match.group(2),
