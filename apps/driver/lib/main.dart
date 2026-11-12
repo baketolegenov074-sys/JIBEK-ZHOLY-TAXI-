@@ -176,11 +176,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       Switch.adaptive(
                         value: _online,
                         activeThumbColor: const Color(0xFF168C8C),
-                        onChanged: (value) {
-                          setState(() => _online = value);
-                          if (value) { _refreshOrders(); } else { setState(() => _orders = []); }
-                          _notice(value ? 'Режим на линии включён' : 'Вы выключили режим на линии');
-                        },
+                        onChanged: _loadingOrders ? null : _setOnline,
                       ),
                     ],
                   ),
@@ -262,6 +258,47 @@ class _DriverMapPageState extends State<DriverMapPage> {
       'Шиномонтаж': JibekServiceType.mobileTire,
     };
     return _services.map((label) => mapping[label]!).toSet();
+  }
+
+  Future<void> _setOnline(bool value) async {
+    if (_apiUrl.isEmpty || _devUserId.isEmpty) {
+      _notice('Сервер или тестовый доступ не настроены — статус не изменён');
+      return;
+    }
+    if (value && _services.isEmpty) {
+      _notice('Выберите хотя бы одну услугу');
+      return;
+    }
+    final repository = DevJibekApiRepository(
+      baseUrl: _apiUrl,
+      devUserIdProvider: () async => _devUserId,
+    );
+    setState(() => _loadingOrders = true);
+    try {
+      await repository.updateDriverPresence(
+        isOnline: value,
+        services: value ? _selectedServices : <JibekServiceType>{},
+      );
+      if (!mounted) return;
+      setState(() {
+        _online = value;
+        if (!value) {
+          _orders = [];
+          _activeOrder = null;
+        }
+      });
+      _notice(value
+          ? 'Вы на линии. Статус сохранён на сервере.'
+          : 'Вы отключились от линии.');
+      if (value) await _refreshOrders();
+    } on JibekApiException catch (error) {
+      _notice('Не удалось изменить статус: ${error.message}');
+    } catch (_) {
+      _notice('Нет связи с сервером. Статус не изменён.');
+    } finally {
+      repository.close();
+      if (mounted) setState(() => _loadingOrders = false);
+    }
   }
 
   Future<void> _refreshOrders() async {
