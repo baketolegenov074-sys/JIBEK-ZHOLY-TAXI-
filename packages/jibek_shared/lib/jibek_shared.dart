@@ -2,6 +2,9 @@ library jibek_shared;
 
 import 'package:flutter/material.dart';
 
+export 'order_models.dart';
+export 'order_repository.dart';
+
 
 class JibekTheme {
   static ThemeData light() {
@@ -164,5 +167,3 @@ class JibekServiceTile extends StatelessWidget {
   }
 }
 
-export 'order_models.dart';
-export 'order_repository.dart';
