@@ -202,11 +202,24 @@ def available_orders(
     driver_id = dev_identity(x_dev_user_id)
     if not services:
         return []
-    marks = ",".join("?" for _ in services)
     with connection() as db:
+        presence = db.execute(
+            "SELECT is_online, services_json FROM driver_presence WHERE driver_id=?",
+            (driver_id,),
+        ).fetchone()
+        # Only drivers who explicitly went online may receive work. The
+        # server-side service selection is authoritative; query parameters
+        # can narrow it but can never add services the driver did not select.
+        if presence is None or not presence["is_online"]:
+            return []
+        enabled_services = set(json.loads(presence["services_json"]))
+        allowed_services = [service for service in services if service in enabled_services]
+        if not allowed_services:
+            return []
+        marks = ",".join("?" for _ in allowed_services)
         rows = db.execute(
             f"SELECT * FROM orders WHERE status='searching' AND passenger_id != ? AND service IN ({marks}) ORDER BY created_at",
-            (driver_id, *services),
+            (driver_id, *allowed_services),
         ).fetchall()
     return [row_to_order(row) for row in rows]
 
