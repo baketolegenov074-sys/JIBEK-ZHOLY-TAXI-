@@ -248,3 +248,28 @@ def test_available_feed_requires_online_presence_and_respects_server_services(cl
     )
     assert offline_again.status_code == 200
     assert offline_again.json() == []
+
+
+
+def test_driver_cannot_go_offline_while_trip_is_active(client):
+    order_id = client.post("/v1/orders", json=ORDER, headers=HEAD_P).json()["id"]
+    online = client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": ["cityTaxi"]},
+        headers=HEAD_D,
+    )
+    assert online.status_code == 200
+    accepted = client.post(f"/v1/orders/{order_id}/accept", headers=HEAD_D)
+    assert accepted.status_code == 200
+
+    offline = client.put(
+        "/v1/driver/presence",
+        json={"isOnline": False, "services": []},
+        headers=HEAD_D,
+    )
+    assert offline.status_code == 409
+    assert offline.json()["detail"] == "Завершите текущий заказ перед отключением от линии"
+
+    active = client.get("/v1/driver/orders/active", headers=HEAD_D)
+    assert active.status_code == 200
+    assert active.json()["id"] == order_id
