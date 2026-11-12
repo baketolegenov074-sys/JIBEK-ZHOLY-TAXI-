@@ -35,6 +35,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
   bool _loadingLocation = false;
   String _service = 'Такси';
   List<JibekOrderRequest> _orders = [];
+  JibekOrderRequest? _activeOrder;
   bool _loadingOrders = false;
   static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
   static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
@@ -222,6 +223,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                   Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
                   const SizedBox(height: 10),
                   if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
+                  if (_activeOrder != null) _activeOrderCard(_activeOrder!),
                   ..._orders.map(_orderCard),
                   if (_orders.isEmpty && !_loadingOrders) Container(
                     padding: const EdgeInsets.symmetric(vertical: 23, horizontal: 16),
@@ -306,11 +308,82 @@ class _DriverMapPageState extends State<DriverMapPage> {
     try {
       final accepted = await repository.acceptOrder(orderId: order.id);
       if (!mounted) return;
-      setState(() => _orders.removeWhere((item) => item.id == accepted.id));
+      setState(() {
+        _orders.removeWhere((item) => item.id == accepted.id);
+        _activeOrder = accepted;
+      });
       _notice('Заказ принят');
     } on JibekApiException catch (e) {
       _notice('Не удалось принять: ' + e.message);
       _refreshOrders();
+    } catch (_) {
+      _notice('Нет связи с сервером');
+    } finally {
+      repository.close();
+    }
+  }
+
+
+  JibekOrderStatus? _nextStatus(JibekOrderStatus status) {
+    switch (status) {
+      case JibekOrderStatus.accepted:
+        return JibekOrderStatus.driverArriving;
+      case JibekOrderStatus.driverArriving:
+        return JibekOrderStatus.inProgress;
+      case JibekOrderStatus.inProgress:
+        return JibekOrderStatus.completed;
+      default:
+        return null;
+    }
+  }
+
+  String _statusLabel(JibekOrderStatus status) {
+    switch (status) {
+      case JibekOrderStatus.accepted: return 'Заказ принят';
+      case JibekOrderStatus.driverArriving: return 'Водитель едет к пассажиру';
+      case JibekOrderStatus.inProgress: return 'Поездка началась';
+      case JibekOrderStatus.completed: return 'Поездка завершена';
+      default: return status.name;
+    }
+  }
+
+  Widget _activeOrderCard(JibekOrderRequest order) {
+    final next = _nextStatus(order.status);
+    return Card(
+      color: const Color(0xFFEAF5F1),
+      margin: const EdgeInsets.only(bottom: 14),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF16834A))),
+          const SizedBox(height: 6),
+          Text(_statusLabel(order.status), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
+          Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
+          if (next != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(width: double.infinity, child: FilledButton(
+              onPressed: () => _advanceOrder(order, next),
+              child: Text(next == JibekOrderStatus.driverArriving ? 'Я выехал к пассажиру' : next == JibekOrderStatus.inProgress ? 'Начать поездку' : 'Завершить поездку'),
+            )),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _advanceOrder(JibekOrderRequest order, JibekOrderStatus status) async {
+    final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
+    try {
+      final updated = await repository.updateOrderStatus(orderId: order.id, status: status);
+      if (!mounted) return;
+      setState(() {
+        _activeOrder = updated.status == JibekOrderStatus.completed ? null : updated;
+      });
+      _notice(updated.status == JibekOrderStatus.completed ? 'Заказ завершён' : _statusLabel(updated.status));
+      if (_online && updated.status == JibekOrderStatus.completed) _refreshOrders();
+    } on JibekApiException catch (e) {
+      _notice('Не удалось обновить статус: ' + e.message);
     } catch (_) {
       _notice('Нет связи с сервером');
     } finally {
