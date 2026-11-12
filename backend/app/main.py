@@ -46,6 +46,19 @@ class OrderCreate(BaseModel):
             raise ValueError("Для городского такси выберите класс автомобиля")
         return value
 
+    @field_validator("note")
+    @classmethod
+    def require_details_for_assistance_services(cls, value, info):
+        service = info.data.get("service")
+        if service in {"parcel", "towTruck", "mobileTire"} and not (value or "").strip():
+            messages = {
+                "parcel": "Опишите посылку и что нужно доставить",
+                "towTruck": "Укажите автомобиль и характер поломки",
+                "mobileTire": "Укажите размер колёс и проблему",
+            }
+            raise ValueError(messages[service])
+        return value
+
     def validate_points_differ(self):
         if (self.pickup.latitude, self.pickup.longitude) == (
             self.destination.latitude, self.destination.longitude
