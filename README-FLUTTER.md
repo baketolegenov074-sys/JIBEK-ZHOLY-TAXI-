@@ -16,11 +16,11 @@ Flutter migration is developed on `flutter-migration`. The original Kotlin modul
 | Foreground device location | Permission-gated, user initiated |
 | Address search | Passenger app uses Nominatim |
 | Road route preview | Passenger app uses OSRM demo endpoint |
-| Passenger-to-driver dispatch | Not connected |
-| Driver accounts and verification | Not connected |
+| Passenger order creation and manual status refresh | API integration scaffolded; requires configured backend and test identity |
+| Passenger cancellation before trip start | API and passenger UI implemented; requires configured backend |\n| Driver accounts and verification | Not connected |
 | Live driver location sharing | Not connected |
 | Pricing, payments and receipts | Not connected |
-| Parcel, tow and mobile tire workflows | Service selection UI only |
+| Parcel, tow and mobile tire workflows | Driver service filters exist; dedicated order forms and workflows remain to be built |
 
 The driver online switch is local UI state only; it does not publish availability to a server. Route preview is not a fare quote and does not create a trip. Nominatim and the OSRM demo endpoint are public services without a production SLA; production launch needs an appropriate service plan and usage-policy compliance.
 
@@ -34,7 +34,7 @@ Location is requested only after the user taps the location control. No backgrou
 
 1. Generate and validate complete Flutter Android platform projects for both apps.
 2. Add backend API, authentication and passenger/driver roles.
-3. Implement order lifecycle, driver offers, accept/decline, cancellation and trip updates.
+3. Complete order lifecycle tests, driver offers, accept/decline and trip updates across both apps.
 4. Add consent-based live driver location while on duty, with clear foreground disclosure.
 5. Add pricing, payment integration, receipts and operational monitoring.
 6. Add end-to-end tests and signed release APKs after explicit release approval.
