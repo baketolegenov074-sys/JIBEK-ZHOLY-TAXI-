@@ -114,7 +114,7 @@ def row_to_order(row: sqlite3.Row) -> dict:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "jibek-zh leading-api"}
+    return {"status": "ok", "service": "jibek-zhholy-api"}
 
 @app.post("/v1/orders", response_model=OrderOut, status_code=201)
 def create_order(body: OrderCreate, x_dev_user_id: str | None = Header(default=None)):
