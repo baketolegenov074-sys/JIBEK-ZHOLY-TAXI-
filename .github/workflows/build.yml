@@ -159,7 +159,32 @@ jobs:
               raise SystemExit("Android app Gradle file was not generated")
 
           gradle = gradle_file.read_text(encoding="utf-8")
-          signing_configs = '''
+          if gradle_file.suffix == ".kts":
+              signing_block = """
+          signingConfigs {
+              create("release") {
+                  keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                  keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                  storeFile = file("upload-keystore.jks")
+                  storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+              }
+          }
+          """
+              if "create(\"release\")" not in gradle:
+                  gradle, inserted = re.subn(r"android\\s*\\{", lambda match: match.group(0) + "\\n" + signing_block, gradle, count=1)
+                  if inserted != 1:
+                      raise SystemExit("Could not add Kotlin release signing configuration")
+              if "signingConfigs.getByName(\"release\")" not in gradle:
+                  gradle, inserted = re.subn(
+                      r'(getByName\\("release"\\)\\s*\\{)',
+                      r'\\1\\n            signingConfig = signingConfigs.getByName("release")',
+                      gradle,
+                      count=1,
+                  )
+                  if inserted != 1:
+                      raise SystemExit("Could not attach Kotlin release signing configuration")
+          else:
+              signing_block = """
           signingConfigs {
               release {
                   keyAlias System.getenv("ANDROID_KEY_ALIAS")
@@ -168,25 +193,25 @@ jobs:
                   storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
               }
           }
-          '''
-          if "signingConfigs {" not in gradle:
-              gradle, inserted = re.subn(r'android\s*\{', lambda match: match.group(0) + "\n" + signing_configs, gradle, count=1)
-              if inserted != 1:
-                  raise SystemExit("Could not add permanent release signing configuration")
-          gradle, replaced = re.subn(
-              r'signingConfig\s*(?:=\s*)?signingConfigs\.debug',
-              'signingConfig signingConfigs.release',
-              gradle,
-          )
-          if replaced == 0:
-              gradle, inserted = re.subn(
-                  r'(buildTypes\s*\{\s*release\s*\{)',
-                  r'\1\n            signingConfig signingConfigs.release',
+          """
+              if "signingConfigs {" not in gradle:
+                  gradle, inserted = re.subn(r"android\\s*\\{", lambda match: match.group(0) + "\\n" + signing_block, gradle, count=1)
+                  if inserted != 1:
+                      raise SystemExit("Could not add Groovy release signing configuration")
+              gradle, replaced = re.subn(
+                  r"signingConfig\\s*(?:=\\s*)?signingConfigs\\.debug",
+                  "signingConfig signingConfigs.release",
                   gradle,
-                  count=1,
               )
-              if inserted != 1:
-                  raise SystemExit("Could not attach permanent key to release build")
+              if replaced == 0:
+                  gradle, inserted = re.subn(
+                      r"(buildTypes\\s*\\{\\s*release\\s*\\{)",
+                      r"\\1\\n            signingConfig signingConfigs.release",
+                      gradle,
+                      count=1,
+                  )
+                  if inserted != 1:
+                      raise SystemExit("Could not attach Groovy release signing configuration")
           gradle, replacements = re.subn(
               r'(applicationId\s*(?:=\s*)?")[^"]+(")',
               lambda match: match.group(1) + application_id + match.group(2),
