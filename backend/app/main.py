@@ -181,10 +181,18 @@ def update_status(order_id: str, body: StatusUpdate, x_dev_user_id: str | None =
         if row is None:
             db.rollback()
             raise HTTPException(404, "Заявка не найдена")
-        if row["driver_id"] != actor and row["passenger_id"] != actor:
+        is_passenger = row["passenger_id"] == actor
+        is_driver = row["driver_id"] == actor
+        if not is_driver and not is_passenger:
             db.rollback()
             raise HTTPException(403, "Нет доступа к этой заявке")
-        if body.status not in ALLOWED_TRANSITIONS.get(row["status"], set()):
+        if is_passenger:
+            # Passengers may cancel before the trip starts, but cannot advance
+            # the driver's workflow or mark a trip completed.
+            allowed = {"cancelled"} if row["status"] in {"searching", "accepted", "driverArriving"} else set()
+        else:
+            allowed = ALLOWED_TRANSITIONS.get(row["status"], set())
+        if body.status not in allowed:
             db.rollback()
             raise HTTPException(409, "Недопустимый переход статуса")
         db.execute("UPDATE orders SET status=? WHERE id=?", (body.status, order_id))
