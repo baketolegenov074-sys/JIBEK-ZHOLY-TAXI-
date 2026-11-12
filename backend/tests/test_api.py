@@ -24,6 +24,11 @@ def test_create_order_and_driver_accepts_once(client):
     created = client.post("/v1/orders", json=ORDER, headers=HEAD_P)
     assert created.status_code == 201
     order_id = created.json()["id"]
+    client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": ["cityTaxi"]},
+        headers=HEAD_D,
+    )
     available = client.get(
         "/v1/driver/orders/available?services=cityTaxi", headers=HEAD_D
     )
@@ -91,6 +96,11 @@ def test_unrelated_user_cannot_read_order(client):
 
 def test_driver_cannot_accept_own_order_or_see_it_in_available_feed(client):
     own_order = client.post("/v1/orders", json=ORDER, headers=HEAD_D).json()["id"]
+    client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": ["cityTaxi"]},
+        headers=HEAD_D,
+    )
     available = client.get(
         "/v1/driver/orders/available?services=cityTaxi", headers=HEAD_D
     )
@@ -194,3 +204,47 @@ def test_driver_presence_requires_services_and_persists_state(client):
     )
     assert offline.status_code == 200
     assert offline.json()["isOnline"] is False
+
+
+
+def test_available_feed_requires_online_presence_and_respects_server_services(client):
+    city_order = client.post("/v1/orders", json=ORDER, headers=HEAD_P).json()["id"]
+    parcel_order = client.post(
+        "/v1/orders",
+        json={**ORDER, "service": "parcel", "vehicleClass": None, "note": "Документы"},
+        headers={"X-Dev-User-Id": "passenger-2"},
+    ).json()["id"]
+
+    # A driver without a published online presence receives no work.
+    offline = client.get(
+        "/v1/driver/orders/available?services=cityTaxi&services=parcel",
+        headers=HEAD_D,
+    )
+    assert offline.status_code == 200
+    assert offline.json() == []
+
+    client.put(
+        "/v1/driver/presence",
+        json={"isOnline": True, "services": ["cityTaxi"]},
+        headers=HEAD_D,
+    )
+    # Asking for additional services cannot bypass the server-side selection.
+    available = client.get(
+        "/v1/driver/orders/available?services=cityTaxi&services=parcel",
+        headers=HEAD_D,
+    )
+    assert available.status_code == 200
+    assert [order["id"] for order in available.json()] == [city_order]
+    assert parcel_order not in [order["id"] for order in available.json()]
+
+    client.put(
+        "/v1/driver/presence",
+        json={"isOnline": False, "services": []},
+        headers=HEAD_D,
+    )
+    offline_again = client.get(
+        "/v1/driver/orders/available?services=cityTaxi",
+        headers=HEAD_D,
+    )
+    assert offline_again.status_code == 200
+    assert offline_again.json() == []
