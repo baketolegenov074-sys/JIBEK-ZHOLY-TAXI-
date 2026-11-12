@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -168,7 +170,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       ),
                       Switch.adaptive(
                         value: _online,
-                        activeColor: const Color(0xFF168C8C),
+                        activeThumbColor: const Color(0xFF168C8C),
                         onChanged: (value) {
                           setState(() => _online = value);
                           _notice(value
