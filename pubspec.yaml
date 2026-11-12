@@ -12,6 +12,12 @@ dependencies:
     sdk: flutter
   jibek_shared:
     path: packages/jibek_shared
+  jibek_passenger:
+    path: apps/passenger
+  jibek_driver:
+    path: apps/driver
+  jibek_owner_admin:
+    path: apps/owner_admin
   flutter_map: ^8.1.1
   latlong2: ^0.9.1
   geolocator: ^14.0.2
