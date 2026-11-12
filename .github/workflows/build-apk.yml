@@ -1,0 +1,30 @@
+name: Build Android APKs
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build both APKs
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIBEK-ZHOLY-APKs
+          path: |
+            passenger/build/outputs/apk/debug/passenger-debug.apk
+            driver/build/outputs/apk/debug/driver-debug.apk
+          if-no-files-found: error
+          retention-days: 14
