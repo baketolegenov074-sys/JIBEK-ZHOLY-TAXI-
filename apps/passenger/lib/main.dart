@@ -242,7 +242,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
           point: _fromPoint!,
           width: 42,
           height: 42,
-          child: const Icon(Icons.my_location, color: Color(0xFF168C8C), size: 32),
+          child: const Icon(Icons.my_location, color: Color(0xFFD6A52F), size: 32),
         ),
       if (_toPoint != null)
         Marker(
@@ -273,7 +273,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   Polyline(
                     points: _route,
                     strokeWidth: 5,
-                    color: const Color(0xFF168C8C),
+                    color: const Color(0xFFD6A52F),
                     borderStrokeWidth: 1.5,
                     borderColor: Colors.white,
                   ),
@@ -292,7 +292,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10243A),
+                      color: const Color(0xFF071B45),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
                     ),
@@ -314,7 +314,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       onPressed: _locating ? null : _findMe,
                       icon: _locating
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, color: Color(0xFF10243A)),
+                          : const Icon(Icons.my_location_rounded, color: Color(0xFF071B45)),
                     ),
                   ),
                 ],
@@ -339,7 +339,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                 children: [
                   Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
                   const SizedBox(height: 16),
-                  const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+                  const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
                   const SizedBox(height: 14),
                   _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom()),
                   const SizedBox(height: 9),
@@ -404,7 +404,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: const Color(0xFFEAF5F3), borderRadius: BorderRadius.circular(14)),
                       child: Row(children: [
-                        const Icon(Icons.route, color: Color(0xFF168C8C)),
+                        const Icon(Icons.route, color: Color(0xFFD6A52F)),
                         const SizedBox(width: 10),
                         Text('$_distanceLabel  •  $_durationLabel', style: const TextStyle(fontWeight: FontWeight.w800)),
                       ]),
@@ -425,7 +425,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: Text(item.$2),
                       selected: _service == item.$1,
                       onSelected: (_) => setState(() => _service = item.$1),
-                      selectedColor: const Color(0xFFE8D5AC),
+                      selectedColor: const Color(0xFFFFE7A0),
                     )).toList(),
                   ),
                   if (_service == JibekServiceType.cityTaxi) ...[
@@ -438,8 +438,8 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: Text(item),
                       selected: _class == item,
                       onSelected: (_) => setState(() => _class = item),
-                      selectedColor: const Color(0xFFE8D5AC),
-                      labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF10243A) : const Color(0xFF657184)),
+                      selectedColor: const Color(0xFFFFE7A0),
+                      labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF071B45) : const Color(0xFF657184)),
                       side: BorderSide(color: _class == item ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
                     )).toList(),
                   ),
@@ -480,7 +480,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
                       label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10243A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF071B45), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -676,7 +676,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       textInputAction: TextInputAction.search,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: const Color(0xFF168C8C)),
+        prefixIcon: Icon(icon, color: const Color(0xFFD6A52F)),
         hintText: hint,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
