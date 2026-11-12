@@ -46,7 +46,7 @@ jobs:
           flutter create --platforms=android --org kz.jibekzholy --project-name jibek_driver apps/driver
           flutter create --platforms=android --org kz.jibekzholy --project-name jibek_owner_admin apps/owner_admin
 
-      - name: Pin Android build tooling (Gradle 8.2, AGP 8.2.2, SDK 34)
+      - name: Pin Android build tooling (Gradle 8.7, AGP 8.6.1, Kotlin 2.0.21, SDK 34)
         shell: bash
         run: |
           set -euo pipefail
@@ -54,9 +54,9 @@ jobs:
             settings="apps/$app/android/settings.gradle"
             wrapper="apps/$app/android/gradle/wrapper/gradle-wrapper.properties"
             app_gradle="apps/$app/android/app/build.gradle"
-            sed -i 's/id "com.android.application" version "[^"]*"/id "com.android.application" version "8.2.2"/' "$settings"
-            sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' "$settings"
-            sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.2-all.zip#' "$wrapper"
+            sed -i 's/id "com.android.application" version "[^"]*"/id "com.android.application" version "8.6.1"/' "$settings"
+            sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "2.0.21"/' "$settings"
+            sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip#' "$wrapper"
             sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/' "$app_gradle"
             sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 34/' "$app_gradle"
           done
