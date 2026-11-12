@@ -78,6 +78,16 @@ class JibekOrderRequest {
         (vehicleClass == null || vehicleClass!.trim().isEmpty)) {
       return 'Для городского такси выберите класс автомобиля';
     }
+    if ((service == JibekServiceType.parcel ||
+            service == JibekServiceType.towTruck ||
+            service == JibekServiceType.mobileTire) &&
+        (note == null || note!.trim().isEmpty)) {
+      return service == JibekServiceType.parcel
+          ? 'Опишите посылку и что нужно доставить'
+          : service == JibekServiceType.towTruck
+              ? 'Укажите автомобиль и характер поломки'
+              : 'Укажите размер колёс и проблему';
+    }
     return null;
   }
 
