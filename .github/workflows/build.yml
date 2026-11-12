@@ -84,12 +84,28 @@ jobs:
                   String alias = System.getenv("ANDROID_KEY_ALIAS");
                   char[] storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD").toCharArray();
                   char[] keyPassword = System.getenv("ANDROID_KEY_PASSWORD").toCharArray();
+                  java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                  try (FileInputStream hashInput = new FileInputStream(path)) {
+                      byte[] buffer = new byte[8192];
+                      int count;
+                      while ((count = hashInput.read(buffer)) != -1) digest.update(buffer, 0, count);
+                  }
+                  StringBuilder hex = new StringBuilder();
+                  for (byte b : digest.digest()) hex.append(String.format("%02x", b));
+                  String fingerprint = hex.toString();
+                  if (fingerprint.equals("a5a3949a2826ee524fea52699b21bc3e82b6c155ddc64d0bf96033ac0b9ca0a4")) {
+                      System.out.println("KEY_FILE_MATCH: JIBEK-ZHOLY-ANDROID-RELEASE-KEY.zip");
+                  } else if (fingerprint.equals("3ecd793b631fd2bee64fefaf385f7c5e3cde3fac2dd659fad044fe78a5be589f")) {
+                      System.out.println("KEY_FILE_MATCH: JIBEK-ZHOLY-ANDROID-RELEASE-KEY-SAME-PASSWORD.zip");
+                  } else {
+                      System.out.println("KEY_FILE_MATCH: neither of the two locally verified archive files.");
+                  }
                   KeyStore store = KeyStore.getInstance("JKS");
                   try (FileInputStream input = new FileInputStream(path)) {
                       try {
                           store.load(input, storePassword);
                       } catch (Exception e) {
-                          System.err.println("SIGNING_CHECK_FAILED: keystore file or store password is invalid.");
+                          System.err.println("SIGNING_CHECK_FAILED: keystore load failed (" + e.getClass().getSimpleName() + ").");
                           System.exit(11);
                       }
                   }
