@@ -17,6 +17,7 @@ Flutter migration is developed on `flutter-migration`. The original Kotlin modul
 | Address search | Passenger app uses Nominatim |
 | Road route preview | Passenger app uses OSRM demo endpoint |
 | Passenger order creation and manual status refresh | API integration scaffolded; requires configured backend and test identity |
+| Passenger order recovery after app restart | Saves order ID locally and restores current server status when API access is configured |
 | Passenger cancellation before trip start | API and passenger UI implemented; requires configured backend |
 | Driver accounts and verification | Not connected |
 | Live driver location sharing | Not connected |
