@@ -34,6 +34,10 @@ class _DriverMapPageState extends State<DriverMapPage> {
   bool _online = false;
   bool _loadingLocation = false;
   String _service = 'Такси';
+  List<JibekOrderRequest> _orders = [];
+  bool _loadingOrders = false;
+  static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
+  static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
 
   Future<void> _locateDriver() async {
     setState(() => _loadingLocation = true);
@@ -173,9 +177,8 @@ class _DriverMapPageState extends State<DriverMapPage> {
                         activeThumbColor: const Color(0xFF168C8C),
                         onChanged: (value) {
                           setState(() => _online = value);
-                          _notice(value
-                              ? 'Режим на линии включён только на этом устройстве. Сервер заказов ещё не подключён.'
-                              : 'Вы выключили режим на линии');
+                          if (value) { _refreshOrders(); } else { setState(() => _orders = []); }
+                          _notice(value ? 'Режим на линии включён' : 'Вы выключили режим на линии');
                         },
                       ),
                     ],
@@ -216,9 +219,11 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  const Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A))),
+                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
                   const SizedBox(height: 10),
-                  Container(
+                  if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
+                  ..._orders.map(_orderCard),
+                  if (_orders.isEmpty && !_loadingOrders) Container(
                     padding: const EdgeInsets.symmetric(vertical: 23, horizontal: 16),
                     decoration: BoxDecoration(
                       border: Border.all(color: const Color(0xFFE4E9EF)),
@@ -230,7 +235,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                         SizedBox(height: 8),
                         Text('Пока нет заявок', style: TextStyle(fontWeight: FontWeight.w800)),
                         SizedBox(height: 4),
-                        Text('Реальные заявки появятся после подключения сервера и регистрации водителей.',
+                        Text(_online ? 'Нажмите обновить, чтобы проверить новые заявки.' : 'Включите режим на линии, чтобы получать заявки.',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Color(0xFF687386), fontSize: 12, height: 1.4)),
                       ],
@@ -243,6 +248,74 @@ class _DriverMapPageState extends State<DriverMapPage> {
         ],
       ),
     );
+  }
+
+
+  Set<JibekServiceType> get _selectedServices {
+    const mapping = {
+      'Такси': JibekServiceType.cityTaxi,
+      'Межгород': JibekServiceType.intercity,
+      'Посылки': JibekServiceType.parcel,
+      'Эвакуатор': JibekServiceType.towTruck,
+      'Шиномонтаж': JibekServiceType.mobileTire,
+    };
+    return {mapping[_service]!};
+  }
+
+  Future<void> _refreshOrders() async {
+    if (_apiUrl.isEmpty || _devUserId.isEmpty) {
+      _notice('Сервер или тестовый доступ не настроены');
+      return;
+    }
+    setState(() => _loadingOrders = true);
+    final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
+    try {
+      final orders = await repository.getAvailableOrders(services: _selectedServices);
+      if (mounted) setState(() => _orders = orders);
+    } on JibekApiException catch (e) {
+      _notice('Ошибка загрузки: ' + e.message);
+    } catch (_) {
+      _notice('Нет связи с сервером');
+    } finally {
+      repository.close();
+      if (mounted) setState(() => _loadingOrders = false);
+    }
+  }
+
+  Widget _orderCard(JibekOrderRequest order) => Card(
+    margin: const EdgeInsets.only(bottom: 10),
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(order.service.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+        const SizedBox(height: 7),
+        Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
+        Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
+        if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
+        const SizedBox(height: 10),
+        SizedBox(width: double.infinity, child: FilledButton(
+          onPressed: () => _acceptOrder(order),
+          child: const Text('Принять заказ'),
+        )),
+      ]),
+    ),
+  );
+
+  Future<void> _acceptOrder(JibekOrderRequest order) async {
+    final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
+    try {
+      final accepted = await repository.acceptOrder(orderId: order.id);
+      if (!mounted) return;
+      setState(() => _orders.removeWhere((item) => item.id == accepted.id));
+      _notice('Заказ принят');
+    } on JibekApiException catch (e) {
+      _notice('Не удалось принять: ' + e.message);
+      _refreshOrders();
+    } catch (_) {
+      _notice('Нет связи с сервером');
+    } finally {
+      repository.close();
+    }
   }
 
   Widget _serviceChip(String label, IconData icon) {
