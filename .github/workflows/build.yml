@@ -170,18 +170,18 @@ jobs:
           }
           '''
           if "signingConfigs {" not in gradle:
-              gradle, inserted = re.subn(r'android\\s*\\{', lambda match: match.group(0) + "\\n" + signing_configs, gradle, count=1)
+              gradle, inserted = re.subn(r'android\s*\{', lambda match: match.group(0) + "\n" + signing_configs, gradle, count=1)
               if inserted != 1:
                   raise SystemExit("Could not add permanent release signing configuration")
           gradle, replaced = re.subn(
-              r'signingConfig\\s*(?:=\\s*)?signingConfigs\\.debug',
+              r'signingConfig\s*(?:=\s*)?signingConfigs\.debug',
               'signingConfig signingConfigs.release',
               gradle,
           )
           if replaced == 0:
               gradle, inserted = re.subn(
-                  r'(buildTypes\\s*\\{\\s*release\\s*\\{)',
-                  r'\\1\\n            signingConfig signingConfigs.release',
+                  r'(buildTypes\s*\{\s*release\s*\{)',
+                  r'\1\n            signingConfig signingConfigs.release',
                   gradle,
                   count=1,
               )
