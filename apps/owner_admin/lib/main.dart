@@ -108,7 +108,7 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
 
           const SizedBox(height: 18),
           _statusBanner(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           const Row(
             children: [
               Expanded(child: _MetricCard(title: 'Заказы сегодня', value: '—', icon: Icons.receipt_long)),
@@ -123,6 +123,36 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
               SizedBox(width: 10),
               Expanded(child: _MetricCard(title: 'Комиссия', value: '— ₸', icon: Icons.percent)),
             ],
+          ),
+          const SizedBox(height: 22),
+          Container(
+            padding: const EdgeInsets.all(17),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B214D),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFD6A52F), width: 1),
+            ),
+            child: const Row(
+              children: [
+                CircleAvatar(
+                  radius: 23,
+                  backgroundColor: Color(0xFFFFE7A0),
+                  child: Icon(Icons.insights_rounded, color: Color(0xFF071B45)),
+                ),
+                SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Центр управления', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                      SizedBox(height: 4),
+                      Text('Контроль тарифов, заявок водителей и сервисов', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 12, height: 1.35)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFE5B43C), size: 16),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           const Text('Сервисы платформы',
