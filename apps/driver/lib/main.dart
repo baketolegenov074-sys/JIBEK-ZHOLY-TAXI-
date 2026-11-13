@@ -413,26 +413,71 @@ class _DriverMapPageState extends State<DriverMapPage> {
   }
 
   Widget _orderCard(JibekOrderRequest order) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_serviceLabel(order.service), style: const TextStyle(fontWeight: FontWeight.w900)),
-        const SizedBox(height: 7),
-        Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
-        Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
-        if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
-        if (order.note != null && order.note!.trim().isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text('Комментарий: ' + order.note!,
-              style: const TextStyle(color: Color(0xFF687386))),
-        ],
-        const SizedBox(height: 10),
-        SizedBox(width: double.infinity, child: FilledButton(
-          onPressed: () => _acceptOrder(order),
-          child: const Text('Принять заказ'),
-        )),
-      ]),
+    margin: const EdgeInsets.only(bottom: 12),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          color: const Color(0xFFF4F6FA),
+          child: Row(children: [
+            const Icon(Icons.notifications_active_outlined, color: Color(0xFFB18428), size: 19),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_serviceLabel(order.service),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF071B45)))),
+            if (order.vehicleClass != null)
+              Chip(label: Text(order.vehicleClass!), visualDensity: VisualDensity.compact),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Column(children: [
+                  const Icon(Icons.radio_button_checked, size: 17, color: Color(0xFF23845A)),
+                  Container(width: 2, height: 27, color: const Color(0xFFD6DCE5)),
+                  const Icon(Icons.location_on, size: 19, color: Color(0xFFC84D43)),
+                ]),
+                const SizedBox(width: 10),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('ПОДАЧА', style: TextStyle(fontSize: 9, letterSpacing: .8, color: Color(0xFF7A8796), fontWeight: FontWeight.w800)),
+                    Text(order.pickup.address ?? 'Точка на карте',
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 9),
+                    const Text('НАЗНАЧЕНИЕ', style: TextStyle(fontSize: 9, letterSpacing: .8, color: Color(0xFF7A8796), fontWeight: FontWeight.w800)),
+                    Text(order.destination.address ?? 'Точка на карте',
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                )),
+              ]),
+              if (order.note != null && order.note!.trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0xFFFFF7E5), borderRadius: BorderRadius.circular(10)),
+                  child: Text('Комментарий: ${order.note!}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF684A1C))),
+                ),
+              ],
+              const SizedBox(height: 13),
+              SizedBox(width: double.infinity, child: FilledButton.icon(
+                onPressed: () => _acceptOrder(order),
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('Принять заказ'),
+              )),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 
