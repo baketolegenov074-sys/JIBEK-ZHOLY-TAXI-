@@ -44,104 +44,7 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Prepare permanent Android release signing key
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
-            if [ -z "${!name:-}" ]; then
-              echo "::error::Missing GitHub Actions secret: $name"
-              exit 1
-            fi
-          done
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/jibek-zholy-release.jks"
-          test -s "$RUNNER_TEMP/jibek-zholy-release.jks"
-          echo "Permanent signing key loaded."
-
-      - name: Verify Android release signing key and passwords
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          set +x
-          EXPECTED_STORE_PASSWORD_SHA256="264d313394a87ec113836c061b2c4cd5ff227fbc290e800f24ed3f12aab77df8"
-          ACTUAL_STORE_PASSWORD_SHA256="$(printf '%s' "$ANDROID_KEYSTORE_PASSWORD" | sha256sum | cut -d ' ' -f 1)"
-          if [ "$ACTUAL_STORE_PASSWORD_SHA256" != "$EXPECTED_STORE_PASSWORD_SHA256" ]; then
-            echo "::error::ANDROID_KEYSTORE_PASSWORD does not match the verified archive password (value hidden)."
-            exit 10
-          fi
-          echo "STORE_PASSWORD_MATCH: yes (value hidden)"
-          cat > "$RUNNER_TEMP/VerifySigningKey.java" <<'JAVA'
-          import java.io.FileInputStream;
-          import java.security.Key;
-          import java.security.KeyStore;
-          import java.security.UnrecoverableKeyException;
-
-          public class VerifySigningKey {
-              public static void main(String[] args) throws Exception {
-                  String path = args[0];
-                  String alias = System.getenv("ANDROID_KEY_ALIAS");
-                  char[] storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD").toCharArray();
-                  char[] keyPassword = System.getenv("ANDROID_KEY_PASSWORD").toCharArray();
-                  java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-                  try (FileInputStream hashInput = new FileInputStream(path)) {
-                      byte[] buffer = new byte[8192];
-                      int count;
-                      while ((count = hashInput.read(buffer)) != -1) digest.update(buffer, 0, count);
-                  }
-                  StringBuilder hex = new StringBuilder();
-                  for (byte b : digest.digest()) hex.append(String.format("%02x", b));
-                  String fingerprint = hex.toString();
-                  if (fingerprint.equals("a5a3949a2826ee524fea52699b21bc3e82b6c155ddc64d0bf96033ac0b9ca0a4")) {
-                      System.out.println("KEY_FILE_MATCH: JIBEK-ZHOLY-ANDROID-RELEASE-KEY.zip");
-                  } else if (fingerprint.equals("3ecd793b631fd2bee64fefaf385f7c5e3cde3fac2dd659fad044fe78a5be589f")) {
-                      System.out.println("KEY_FILE_MATCH: JIBEK-ZHOLY-ANDROID-RELEASE-KEY-SAME-PASSWORD.zip");
-                  } else {
-                      System.out.println("KEY_FILE_MATCH: neither of the two locally verified archive files.");
-                  }
-                  KeyStore store = KeyStore.getInstance("JKS");
-                  try (FileInputStream input = new FileInputStream(path)) {
-                      try {
-                          store.load(input, storePassword);
-                      } catch (Exception e) {
-                          System.err.println("SIGNING_CHECK_FAILED: keystore load failed (" + e.getClass().getSimpleName() + ").");
-                          System.exit(11);
-                      }
-                  }
-                  if (!store.containsAlias(alias)) {
-                      System.err.println("SIGNING_CHECK_FAILED: configured alias is not present in keystore.");
-                      System.exit(12);
-                  }
-                  try {
-                      Key key = store.getKey(alias, keyPassword);
-                      if (key == null || !(key instanceof java.security.PrivateKey)) {
-                          System.err.println("SIGNING_CHECK_FAILED: alias does not contain a readable private key.");
-                          System.exit(13);
-                      }
-                  } catch (UnrecoverableKeyException e) {
-                      System.err.println("SIGNING_CHECK_FAILED: private-key password is invalid.");
-                      System.exit(14);
-                  }
-                  System.out.println("SIGNING_CHECK_OK: keystore, alias, and private-key password verified.");
-              }
-          }
-          JAVA
-          javac "$RUNNER_TEMP/VerifySigningKey.java"
-          java -cp "$RUNNER_TEMP" VerifySigningKey "$RUNNER_TEMP/jibek-zholy-release.jks"
-
       - name: Build three independent Android applications
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -160,9 +63,6 @@ jobs:
             (
               cd "$app_dir"
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
-
-              # Use the same permanent release key for all future updates.
-              cp "$RUNNER_TEMP/jibek-zholy-release.jks" android/app/upload-keystore.jks
 
               # Install the selected branded launcher icon for this app.
               python3 - <<'PY'
@@ -233,40 +133,6 @@ jobs:
               raise SystemExit("Android app Gradle file was not generated")
 
           gradle = gradle_file.read_text(encoding="utf-8")
-          if gradle_file.suffix == ".kts":
-              signing_block = """
-          signingConfigs {
-              create("release") {
-                  keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-                  keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-                  storeFile = file("upload-keystore.jks")
-                  storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-              }
-          }
-          """
-              if "create(\"release\")" not in gradle:
-                  gradle = gradle.replace("android {", "android {\n" + signing_block, 1)
-              gradle = gradle.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = signingConfigs.getByName("release")', 1)
-              if 'signingConfig = signingConfigs.getByName("release")' not in gradle:
-                  gradle = gradle.replace('release {', 'release {\n            signingConfig = signingConfigs.getByName("release")', 1)
-          else:
-              signing_block = """
-          signingConfigs {
-              release {
-                  keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                  keyPassword System.getenv("ANDROID_KEY_PASSWORD")
-                  storeFile file("upload-keystore.jks")
-                  storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-              }
-          }
-          """
-              if "signingConfigs {" not in gradle:
-                  gradle = gradle.replace("android {", "android {\n" + signing_block, 1)
-              if "signingConfig signingConfigs.release" not in gradle:
-                  if "signingConfig signingConfigs.debug" in gradle:
-                      gradle = gradle.replace("signingConfig signingConfigs.debug", "signingConfig signingConfigs.release", 1)
-                  else:
-                      gradle = gradle.replace("release {", "release {\n            signingConfig signingConfigs.release", 1)
           gradle, replacements = re.subn(
               r'(applicationId\s*(?:=\s*)?")[^"]+(")',
               lambda match: match.group(1) + application_id + match.group(2),
