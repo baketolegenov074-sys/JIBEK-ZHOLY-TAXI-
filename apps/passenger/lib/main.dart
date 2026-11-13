@@ -502,16 +502,18 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     const SizedBox(height: 8),
                     const Text('Класс автомобиля', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
                   const SizedBox(height: 9),
-                  Wrap(
-                    spacing: 8,
-                    children: ['Эконом', 'Комфорт', 'Бизнес'].map((item) => ChoiceChip(
-                      label: Text(item),
-                      selected: _class == item,
-                      onSelected: (_) => setState(() => _class = item),
-                      selectedColor: const Color(0xFFFFE7A0),
-                      labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF071B45) : const Color(0xFF657184)),
-                      side: BorderSide(color: _class == item ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
-                    )).toList(),
+                  SizedBox(
+                    height: 112,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _vehicleOption(title: 'Эконом', subtitle: 'Практично на каждый день', icon: Icons.directions_car_filled_rounded, selected: _class == 'Эконом', onTap: () => setState(() => _class = 'Эконом')),
+                        const SizedBox(width: 10),
+                        _vehicleOption(title: 'Комфорт', subtitle: 'Больше пространства', icon: Icons.airline_seat_recline_extra_rounded, selected: _class == 'Комфорт', onTap: () => setState(() => _class = 'Комфорт')),
+                        const SizedBox(width: 10),
+                        _vehicleOption(title: 'Бизнес', subtitle: 'Повышенный класс', icon: Icons.directions_car_rounded, selected: _class == 'Бизнес', onTap: () => setState(() => _class = 'Бизнес')),
+                      ],
+                    ),
                   ),
                   ],
                   const SizedBox(height: 12),
@@ -734,6 +736,46 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       if (mounted) setState(() => _searching = false);
     }
   }
+
+  Widget _vehicleOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 142,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFFFF5D8) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? const Color(0xFFD6A52F) : const Color(0xFFE1E6EC),
+              width: selected ? 1.8 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                Icon(icon, color: const Color(0xFF071B45), size: 25),
+                const Spacer(),
+                Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: selected ? const Color(0xFFB18428) : const Color(0xFF9AA5B2), size: 18),
+              ]),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
+              Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF687386))),
+            ],
+          ),
+        ),
+      );
 
   Widget _placeField(
     IconData icon,
