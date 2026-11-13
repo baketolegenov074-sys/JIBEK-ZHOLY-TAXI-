@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jibek_shared/jibek_shared.dart';
 
 import 'main.dart' show PassengerMapPage;
 
@@ -26,9 +27,17 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
     super.dispose();
   }
 
-  void _openOrder({String? service}) {
+  void _openOrder({
+    JibekServiceType service = JibekServiceType.cityTaxi,
+    String? destination,
+  }) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PassengerMapPage()),
+      MaterialPageRoute(
+        builder: (_) => PassengerMapPage(
+          initialService: service,
+          initialDestination: destination,
+        ),
+      ),
     );
   }
 
@@ -109,7 +118,7 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
                       child: TextField(
                         controller: _addressController,
                         textInputAction: TextInputAction.search,
-                        onSubmitted: (_) => _openOrder(),
+                        onSubmitted: (_) => _openOrder(destination: _addressController.text.trim()),
                         decoration: const InputDecoration(
                           hintText: 'Введите адрес...',
                           border: InputBorder.none,
@@ -121,7 +130,7 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
                       color: gold,
                       shape: const CircleBorder(),
                       child: IconButton(
-                        onPressed: _openOrder,
+                        onPressed: () => _openOrder(destination: _addressController.text.trim()),
                         icon: const Icon(Icons.arrow_forward_rounded,
                             color: navy, size: 23),
                       ),
@@ -139,13 +148,16 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
                 childAspectRatio: 1.18,
                 children: [
                   _ActionTile(icon: Icons.local_taxi_rounded,
-                      title: 'Вызвать такси', onTap: _openOrder),
+                      title: 'Вызвать такси',
+                      onTap: () => _openOrder(service: JibekServiceType.cityTaxi)),
                   _ActionTile(icon: Icons.map_rounded,
-                      title: 'На карте', onTap: _openOrder),
+                      title: 'На карте', onTap: () => _openOrder()),
                   _ActionTile(icon: Icons.inventory_2_rounded,
-                      title: 'Доставка', onTap: _openOrder),
+                      title: 'Доставка',
+                      onTap: () => _openOrder(service: JibekServiceType.parcel)),
                   _ActionTile(icon: Icons.directions_car_rounded,
-                      title: 'Межгород', onTap: _openOrder),
+                      title: 'Межгород',
+                      onTap: () => _openOrder(service: JibekServiceType.intercity)),
                 ],
               ),
               const SizedBox(height: 24),
