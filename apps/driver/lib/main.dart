@@ -81,67 +81,109 @@ class _DriverMapPageState extends State<DriverMapPage> {
         : [
             Marker(
               point: _driverPoint!,
-              width: 48,
-              height: 48,
-              child: const Icon(Icons.local_taxi_rounded,
-                  color: Color(0xFFD6A52F), size: 38),
+              width: 52,
+              height: 52,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFC107),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x44000000), blurRadius: 12),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.local_taxi_rounded,
+                  color: Color(0xFF0B192C),
+                  size: 29,
+                ),
+              ),
             ),
           ];
 
+    const navy = Color(0xFF0B192C);
+    const yellow = Color(0xFFFFC107);
+
     return Scaffold(
+      backgroundColor: navy,
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(initialCenter: _shymkent, initialZoom: 13),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'kz.jibekzholy.driverapp',
+          Positioned.fill(
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _shymkent,
+                initialZoom: 13,
               ),
-              MarkerLayer(markers: markers),
-              const RichAttributionWidget(
-                attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
-              ),
-            ],
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'kz.jibekzholy.driverapp',
+                ),
+                MarkerLayer(markers: markers),
+                const RichAttributionWidget(
+                  attributions: [
+                    TextSourceAttribution('© OpenStreetMap contributors'),
+                  ],
+                ),
+              ],
+            ),
           ),
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.fromLTRB(10, 9, 16, 9),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF061638), Color(0xFF123B82)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE5B43C), width: 1.2),
-                      boxShadow: const [BoxShadow(color: Color(0x55071936), blurRadius: 16, offset: Offset(0, 6))],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
                     ),
-                    child: Row(
+                    decoration: BoxDecoration(
+                      color: navy,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: yellow, width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x55000000),
+                          blurRadius: 16,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE7A0),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFE5B43C)),
-                          ),
-                          child: const Icon(Icons.directions_car_filled_rounded, color: Color(0xFF071B45), size: 25),
+                        Icon(
+                          Icons.directions_car_filled_rounded,
+                          color: yellow,
+                          size: 28,
                         ),
-                        const SizedBox(width: 11),
-                        const Column(
+                        SizedBox(width: 10),
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 15)),
+                            Text(
+                              'ЖІБЕК ЖОЛЫ',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1,
+                                fontSize: 15,
+                              ),
+                            ),
                             SizedBox(height: 3),
-                            Text('КАБИНЕТ ВОДИТЕЛЯ', style: TextStyle(color: Color(0xFFFFE7A0), fontSize: 8, letterSpacing: .8, fontWeight: FontWeight.w700)),
+                            Text(
+                              'КАБИНЕТ ВОДИТЕЛЯ',
+                              style: TextStyle(
+                                color: yellow,
+                                fontSize: 9,
+                                letterSpacing: .8,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -149,134 +191,164 @@ class _DriverMapPageState extends State<DriverMapPage> {
                   ),
                   const Spacer(),
                   Material(
-                    color: Colors.white,
+                    color: navy,
                     shape: const CircleBorder(),
-                    elevation: 3,
+                    elevation: 5,
                     child: IconButton(
                       tooltip: 'Моё местоположение',
                       onPressed: _loadingLocation ? null : _locateDriver,
                       icon: _loadingLocation
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, color: Color(0xFF071B45)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: yellow,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.my_location_rounded,
+                              color: yellow,
+                            ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+
           DraggableScrollableSheet(
-            initialChildSize: .48,
-            minChildSize: .38,
-            maxChildSize: .78,
+            initialChildSize: .49,
+            minChildSize: .36,
+            maxChildSize: .84,
             snap: true,
-            snapSizes: const [.48, .78],
+            snapSizes: const [.49, .84],
             builder: (context, controller) => Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 18, offset: Offset(0, -4))],
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x44000000),
+                    blurRadius: 22,
+                    offset: Offset(0, -5),
+                  ),
+                ],
               ),
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
                 children: [
-                  Center(child: Container(width: 44, height: 4, decoration: BoxDecoration(color: const Color(0xFFD6A52F), borderRadius: BorderRadius.circular(8)))),
-                  const SizedBox(height: 15),
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD8DEE7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
                   Row(
                     children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF2C9),
-                          borderRadius: BorderRadius.circular(11),
-                          border: Border.all(color: const Color(0xFFE5B43C)),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Рабочая смена',
+                              style: TextStyle(
+                                color: navy,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Управляйте выходом на линию и заказами',
+                              style: TextStyle(
+                                color: Color(0xFF778395),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: const Icon(Icons.stars_rounded, color: Color(0xFF8A6418), size: 19),
                       ),
-                      const SizedBox(width: 9),
-                      const Text('ВОДИТЕЛЬ ЖІБЕК ЖОЛЫ', style: TextStyle(color: Color(0xFF071B45), fontWeight: FontWeight.w900, letterSpacing: .7, fontSize: 10)),
-                      const Spacer(),
-                      const Text('СӘТ САПАР', style: TextStyle(color: Color(0xFF9A762C), fontWeight: FontWeight.w800, letterSpacing: .7, fontSize: 9)),
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF4D1),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.local_taxi_rounded,
+                          color: navy,
+                          size: 26,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 18),
+
                   Container(
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF071B45), Color(0xFF17458C)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: navy,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFD6A52F), width: 1),
+                      border: Border.all(color: yellow, width: 1),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Color(0xFFFFE7A0),
-                          child: Icon(Icons.local_taxi_rounded, color: Color(0xFF071B45)),
-                        ),
-                        SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Рабочая смена', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
-                              SizedBox(height: 3),
-                              Text('Управляйте доступностью и принимайте заказы', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 12)),
+                              Text(
+                                _online ? 'Вы на линии' : 'Вы не на линии',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                _online
+                                    ? 'Вы доступны для новых заказов'
+                                    : 'Включите статус, когда будете готовы',
+                                style: const TextStyle(
+                                  color: Color(0xFFD5DCE7),
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
-                            const SizedBox(height: 4),
-                            Text(_online ? 'Вы включили режим на линии' : 'Вы сейчас не принимаете заявки',
-                                style: const TextStyle(color: Color(0xFF687386), fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      Switch.adaptive(
-                        value: _online,
-                        activeColor: const Color(0xFFD6A52F),
-                        onChanged: _loadingOrders ? null : _setOnline,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: _online ? const Color(0xFFFFF3D4) : const Color(0xFFF1F3F6),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(_online ? Icons.wifi_tethering_rounded : Icons.pause_circle_outline,
-                            color: _online ? const Color(0xFF1D7A50) : const Color(0xFF687386), size: 28),
-                        const SizedBox(width: 11),
-                        Expanded(
-                          child: Text(
-                            _online ? 'Ожидание подключения к системе заказов' : 'Включите режим, когда будете готовы работать',
-                            style: const TextStyle(fontWeight: FontWeight.w700, height: 1.3),
-                          ),
+                        Switch.adaptive(
+                          value: _online,
+                          activeColor: yellow,
+                          onChanged: _loadingOrders ? null : _setOnline,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  const Text('Какие заказы готовы выполнять?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Какие заказы выполнять?',
+                    style: TextStyle(
+                      color: navy,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -289,30 +361,83 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       _serviceChip('Шиномонтаж', Icons.tire_repair_rounded),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF071B45)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
-                  const SizedBox(height: 10),
-                  if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
+
+                  const SizedBox(height: 22),
+
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Новые заказы',
+                          style: TextStyle(
+                            color: navy,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Обновить заказы',
+                        onPressed:
+                            _loadingOrders || !_online ? null : _refreshOrders,
+                        icon: const Icon(Icons.refresh_rounded, color: navy),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (_loadingOrders)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(18),
+                        child: CircularProgressIndicator(color: navy),
+                      ),
+                    ),
+
                   if (_activeOrder != null) _activeOrderCard(_activeOrder!),
                   ..._orders.map(_orderCard),
-                  if (_orders.isEmpty && !_loadingOrders) Container(
-                    padding: const EdgeInsets.symmetric(vertical: 23, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE4E9EF)),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(Icons.inbox_outlined, size: 36, color: Color(0xFF9AA5B2)),
-                        SizedBox(height: 8),
-                        Text('Пока нет заявок', style: TextStyle(fontWeight: FontWeight.w800)),
-                        SizedBox(height: 4),
-                        Text(_online ? 'Нажмите обновить, чтобы проверить новые заявки.' : 'Включите режим на линии, чтобы получать заявки.',
+
+                  if (_orders.isEmpty && !_loadingOrders)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 25,
+                        horizontal: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F7FA),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE5EAF0)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.inbox_outlined,
+                            size: 38,
+                            color: Color(0xFF9AA5B2),
+                          ),
+                          const SizedBox(height: 9),
+                          const Text(
+                            'Пока нет заявок',
+                            style: TextStyle(
+                              color: navy,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            _online
+                                ? 'Нажмите обновить, чтобы проверить новые заявки.'
+                                : 'Включите режим на линии, чтобы получать заявки.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Color(0xFF687386), fontSize: 12, height: 1.4)),
-                      ],
+                            style: const TextStyle(
+                              color: Color(0xFF778395),
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -321,7 +446,6 @@ class _DriverMapPageState extends State<DriverMapPage> {
       ),
     );
   }
-
 
   Set<JibekServiceType> get _selectedServices {
     const mapping = {
