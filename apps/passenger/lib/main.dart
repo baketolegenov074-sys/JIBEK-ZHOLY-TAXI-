@@ -290,17 +290,41 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.fromLTRB(10, 9, 16, 9),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF071B45),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF061638), Color(0xFF123B82)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE5B43C), width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x55071936), blurRadius: 16, offset: Offset(0, 6)),
+                      ],
                     ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        Text('ТАКСИ • ДОСТАВКА • ПОМОЩЬ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .7)),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFE7A0),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE5B43C), width: 1),
+                          ),
+                          child: const Icon(Icons.route_rounded, color: Color(0xFF071B45), size: 25),
+                        ),
+                        const SizedBox(width: 11),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 15)),
+                            SizedBox(height: 3),
+                            Text('ТАКСИ  •  ДОСТАВКА  •  ПОМОЩЬ', style: TextStyle(color: Color(0xFFFFE7A0), fontSize: 8, letterSpacing: .55, fontWeight: FontWeight.w700)),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -337,8 +361,27 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                 controller: scrollController,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 children: [
-                  Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
-                  const SizedBox(height: 16),
+                  Center(child: Container(width: 44, height: 4, decoration: BoxDecoration(color: const Color(0xFFD6A52F), borderRadius: BorderRadius.circular(8)))),
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF2C9),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(color: const Color(0xFFE5B43C)),
+                        ),
+                        child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF8A6418), size: 19),
+                      ),
+                      const SizedBox(width: 9),
+                      const Text('ВАШ МАРШРУТ', style: TextStyle(color: Color(0xFF071B45), fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 11)),
+                      const Spacer(),
+                      const Text('ҚОШ КЕЛДІҢІЗ', style: TextStyle(color: Color(0xFF9A762C), fontWeight: FontWeight.w800, letterSpacing: .7, fontSize: 9)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
