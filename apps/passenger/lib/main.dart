@@ -339,7 +339,34 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                 children: [
                   Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
                   const SizedBox(height: 16),
-                  const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF071B45), Color(0xFF17458C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFD6A52F), width: 1),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.directions_car_filled_rounded, color: Color(0xFFFFE7A0), size: 30),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Куда поедем?', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Colors.white)),
+                              SizedBox(height: 3),
+                              Text('Выберите маршрут и подходящий сервис', style: TextStyle(fontSize: 12, color: Color(0xFFDCE7FF))),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom()),
                   const SizedBox(height: 9),
