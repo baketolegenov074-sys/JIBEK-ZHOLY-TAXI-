@@ -98,17 +98,49 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
               boxShadow: const [BoxShadow(color: Color(0x22071B45), blurRadius: 16, offset: Offset(0, 7))],
             ),
             child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [Icon(Icons.location_on_rounded, color: Color(0xFFFFE7A0), size: 28), SizedBox(width: 8), Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: .5))]),
-              SizedBox(height: 12),
-              Text('Добро пожаловать', style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
+              Row(children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Color(0xFFFFE7A0),
+                  child: Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF071B45), size: 25),
+                ),
+                SizedBox(width: 11),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: .7)),
+                    SizedBox(height: 3),
+                    Text('OWNER CONTROL CENTER', style: TextStyle(color: Color(0xFFFFE7A0), fontSize: 9, letterSpacing: 1.1, fontWeight: FontWeight.w800)),
+                  ],
+                )),
+                Icon(Icons.auto_awesome_rounded, color: Color(0xFFE5B43C), size: 21),
+              ]),
+              SizedBox(height: 17),
+              Text('Центр управления', style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
               SizedBox(height: 5),
-              Text('Управление службой такси и сервисами', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 13)),
+              Text('Контроль службы такси и городских сервисов', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 13)),
+              SizedBox(height: 14),
+              Divider(color: Color(0x55FFE7A0), height: 1),
+              SizedBox(height: 10),
+              Row(children: [
+                Icon(Icons.shield_outlined, color: Color(0xFFFFE7A0), size: 16),
+                SizedBox(width: 7),
+                Text('ПАНЕЛЬ ВЛАДЕЛЬЦА', style: TextStyle(color: Color(0xFFFFE7A0), fontSize: 9, letterSpacing: 1.2, fontWeight: FontWeight.w800)),
+              ]),
             ]),
           ),
 
           const SizedBox(height: 18),
           _statusBanner(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          const Row(
+            children: [
+              Icon(Icons.analytics_outlined, color: Color(0xFFB18428), size: 20),
+              SizedBox(width: 8),
+              Text('ПОКАЗАТЕЛИ ПЛАТФОРМЫ', style: TextStyle(color: Color(0xFF071B45), fontWeight: FontWeight.w900, letterSpacing: .8, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 10),
           const Row(
             children: [
               Expanded(child: _MetricCard(title: 'Заказы сегодня', value: '—', icon: Icons.receipt_long)),
