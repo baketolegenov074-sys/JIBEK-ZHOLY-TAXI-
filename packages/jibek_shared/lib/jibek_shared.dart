@@ -33,60 +33,98 @@ class JibekTheme {
         foregroundColor: Colors.white,
         centerTitle: false,
         elevation: 0,
+        scrolledUnderElevation: 0,
         titleTextStyle: TextStyle(
-          color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900,
-          letterSpacing: .4,
+          color: Colors.white,
+          fontSize: 19,
+          fontWeight: FontWeight.w900,
+          letterSpacing: .5,
         ),
         iconTheme: IconThemeData(color: goldLight),
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 2,
-        shadowColor: navy.withOpacity(.08),
+        elevation: 1.5,
+        shadowColor: navy.withOpacity(.07),
+        surfaceTintColor: Colors.transparent,
         margin: const EdgeInsets.only(bottom: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFE6EBF4)),
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: Color(0xFFE7ECF5)),
         ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFE8EDF5),
+        thickness: 1,
+        space: 1,
+      ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(color: ink, fontSize: 28, fontWeight: FontWeight.w900, height: 1.12),
+        headlineMedium: TextStyle(color: ink, fontSize: 23, fontWeight: FontWeight.w900, height: 1.15),
+        titleLarge: TextStyle(color: ink, fontSize: 19, fontWeight: FontWeight.w800),
+        titleMedium: TextStyle(color: ink, fontSize: 16, fontWeight: FontWeight.w800),
+        bodyLarge: TextStyle(color: ink, fontSize: 15, height: 1.4),
+        bodyMedium: TextStyle(color: muted, fontSize: 13, height: 1.4),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF5F7FC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        fillColor: const Color(0xFFF7F9FD),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         hintStyle: const TextStyle(color: Color(0xFF8A98B2)),
+        labelStyle: const TextStyle(color: muted, fontWeight: FontWeight.w600),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(17),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: Color(0xFFE4EAF4)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: gold, width: 1.6),
+          borderRadius: BorderRadius.circular(17),
+          borderSide: const BorderSide(color: gold, width: 1.7),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: navy,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFFB9C3D4),
           textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: navy,
-          side: const BorderSide(color: gold, width: 1.3),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          side: const BorderSide(color: gold, width: 1.25),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: blue,
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: const Color(0xFFF1F4FA),
+        selectedColor: goldLight,
+        disabledColor: const Color(0xFFE9EDF4),
+        side: const BorderSide(color: Color(0xFFE0E6F0)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+        secondaryLabelStyle: const TextStyle(color: navy, fontWeight: FontWeight.w800),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: navy,
         indicatorColor: const Color(0xFF294C88),
+        elevation: 8,
         iconTheme: WidgetStateProperty.resolveWith((states) =>
           IconThemeData(color: states.contains(WidgetState.selected) ? goldLight : Colors.white70)),
         labelTextStyle: WidgetStateProperty.resolveWith((states) =>
@@ -98,7 +136,7 @@ class JibekTheme {
         backgroundColor: navy,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-);
+    );
   }
 }
 
@@ -171,25 +209,27 @@ class JibekServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(17),
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFFFF2C9), Color(0xFFFFE3A0)],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(17),
                   border: Border.all(color: const Color(0xFFE9C76D)),
                 ),
-                child: Icon(icon, color: JibekTheme.navy, size: 27),
+                child: Icon(icon, color: JibekTheme.navy, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -201,7 +241,7 @@ class JibekServiceTile extends StatelessWidget {
                     )),
                     const SizedBox(height: 4),
                     Text(subtitle, style: const TextStyle(
-                      fontSize: 13, color: JibekTheme.muted,
+                      fontSize: 13, color: JibekTheme.muted, height: 1.35,
                     )),
                   ],
                 ),
