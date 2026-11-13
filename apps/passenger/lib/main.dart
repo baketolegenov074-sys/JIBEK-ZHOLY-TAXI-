@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'passenger_home_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class JibekPassengerApp extends StatelessWidget {
         title: 'ЖІБЕК ЖОЛЫ',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
-        home: const PassengerMapPage(),
+        home: const PassengerHomePage(),
       );
 }
 
