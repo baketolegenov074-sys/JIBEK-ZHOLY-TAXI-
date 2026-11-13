@@ -5,12 +5,14 @@ on:
     branches:
       - main
       - flutter-migration
+      - feature/passenger-home-screen
     tags:
       - 'v*'
   pull_request:
     branches:
       - main
       - flutter-migration
+      - feature/passenger-home-screen
   workflow_dispatch:
 
 permissions:
