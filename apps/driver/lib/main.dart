@@ -160,6 +160,39 @@ class _DriverMapPageState extends State<DriverMapPage> {
                 children: [
                   Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
                   const SizedBox(height: 17),
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF071B45), Color(0xFF17458C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFD6A52F), width: 1),
+                    ),
+                    child: const Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Color(0xFFFFE7A0),
+                          child: Icon(Icons.local_taxi_rounded, color: Color(0xFF071B45)),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Рабочая смена', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                              SizedBox(height: 3),
+                              Text('Управляйте доступностью и принимайте заказы', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
