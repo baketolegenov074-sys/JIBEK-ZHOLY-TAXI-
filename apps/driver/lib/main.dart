@@ -84,7 +84,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
               width: 48,
               height: 48,
               child: const Icon(Icons.local_taxi_rounded,
-                  color: Color(0xFF168C8C), size: 38),
+                  color: Color(0xFFD6A52F), size: 38),
             ),
           ];
 
@@ -111,17 +111,39 @@ class _DriverMapPageState extends State<DriverMapPage> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.fromLTRB(10, 9, 16, 9),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10243A),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF061638), Color(0xFF123B82)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE5B43C), width: 1.2),
+                      boxShadow: const [BoxShadow(color: Color(0x55071936), blurRadius: 16, offset: Offset(0, 6))],
                     ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        Text('КАБИНЕТ ВОДИТЕЛЯ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .8)),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFE7A0),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE5B43C)),
+                          ),
+                          child: const Icon(Icons.directions_car_filled_rounded, color: Color(0xFF071B45), size: 25),
+                        ),
+                        const SizedBox(width: 11),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 15)),
+                            SizedBox(height: 3),
+                            Text('КАБИНЕТ ВОДИТЕЛЯ', style: TextStyle(color: Color(0xFFFFE7A0), fontSize: 8, letterSpacing: .8, fontWeight: FontWeight.w700)),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -135,7 +157,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       onPressed: _loadingLocation ? null : _locateDriver,
                       icon: _loadingLocation
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, color: Color(0xFF10243A)),
+                          : const Icon(Icons.my_location_rounded, color: Color(0xFF071B45)),
                     ),
                   ),
                 ],
@@ -158,15 +180,67 @@ class _DriverMapPageState extends State<DriverMapPage> {
                 controller: controller,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                 children: [
-                  Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
-                  const SizedBox(height: 17),
+                  Center(child: Container(width: 44, height: 4, decoration: BoxDecoration(color: const Color(0xFFD6A52F), borderRadius: BorderRadius.circular(8)))),
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF2C9),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(color: const Color(0xFFE5B43C)),
+                        ),
+                        child: const Icon(Icons.stars_rounded, color: Color(0xFF8A6418), size: 19),
+                      ),
+                      const SizedBox(width: 9),
+                      const Text('ВОДИТЕЛЬ ЖІБЕК ЖОЛЫ', style: TextStyle(color: Color(0xFF071B45), fontWeight: FontWeight.w900, letterSpacing: .7, fontSize: 10)),
+                      const Spacer(),
+                      const Text('СӘТ САПАР', style: TextStyle(color: Color(0xFF9A762C), fontWeight: FontWeight.w800, letterSpacing: .7, fontSize: 9)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF071B45), Color(0xFF17458C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFD6A52F), width: 1),
+                    ),
+                    child: const Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Color(0xFFFFE7A0),
+                          child: Icon(Icons.local_taxi_rounded, color: Color(0xFF071B45)),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Рабочая смена', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                              SizedBox(height: 3),
+                              Text('Управляйте доступностью и принимайте заказы', style: TextStyle(color: Color(0xFFDCE7FF), fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
                             const SizedBox(height: 4),
                             Text(_online ? 'Вы включили режим на линии' : 'Вы сейчас не принимаете заявки',
                                 style: const TextStyle(color: Color(0xFF687386), fontSize: 13)),
@@ -175,7 +249,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                       ),
                       Switch.adaptive(
                         value: _online,
-                        activeColor: const Color(0xFF168C8C),
+                        activeColor: const Color(0xFFD6A52F),
                         onChanged: _loadingOrders ? null : _setOnline,
                       ),
                     ],
@@ -184,13 +258,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: _online ? const Color(0xFFEAF5F1) : const Color(0xFFF1F3F6),
+                      color: _online ? const Color(0xFFFFF3D4) : const Color(0xFFF1F3F6),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       children: [
                         Icon(_online ? Icons.wifi_tethering_rounded : Icons.pause_circle_outline,
-                            color: _online ? const Color(0xFF16834A) : const Color(0xFF687386), size: 28),
+                            color: _online ? const Color(0xFF1D7A50) : const Color(0xFF687386), size: 28),
                         const SizedBox(width: 11),
                         Expanded(
                           child: Text(
@@ -216,7 +290,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
+                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF071B45)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
                   const SizedBox(height: 10),
                   if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
                   if (_activeOrder != null) _activeOrderCard(_activeOrder!),
@@ -339,26 +413,71 @@ class _DriverMapPageState extends State<DriverMapPage> {
   }
 
   Widget _orderCard(JibekOrderRequest order) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_serviceLabel(order.service), style: const TextStyle(fontWeight: FontWeight.w900)),
-        const SizedBox(height: 7),
-        Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
-        Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
-        if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
-        if (order.note != null && order.note!.trim().isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text('Комментарий: ' + order.note!,
-              style: const TextStyle(color: Color(0xFF687386))),
-        ],
-        const SizedBox(height: 10),
-        SizedBox(width: double.infinity, child: FilledButton(
-          onPressed: () => _acceptOrder(order),
-          child: const Text('Принять заказ'),
-        )),
-      ]),
+    margin: const EdgeInsets.only(bottom: 12),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          color: const Color(0xFFF4F6FA),
+          child: Row(children: [
+            const Icon(Icons.notifications_active_outlined, color: Color(0xFFB18428), size: 19),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_serviceLabel(order.service),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF071B45)))),
+            if (order.vehicleClass != null)
+              Chip(label: Text(order.vehicleClass!), visualDensity: VisualDensity.compact),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Column(children: [
+                  const Icon(Icons.radio_button_checked, size: 17, color: Color(0xFF23845A)),
+                  Container(width: 2, height: 27, color: const Color(0xFFD6DCE5)),
+                  const Icon(Icons.location_on, size: 19, color: Color(0xFFC84D43)),
+                ]),
+                const SizedBox(width: 10),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('ПОДАЧА', style: TextStyle(fontSize: 9, letterSpacing: .8, color: Color(0xFF7A8796), fontWeight: FontWeight.w800)),
+                    Text(order.pickup.address ?? 'Точка на карте',
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 9),
+                    const Text('НАЗНАЧЕНИЕ', style: TextStyle(fontSize: 9, letterSpacing: .8, color: Color(0xFF7A8796), fontWeight: FontWeight.w800)),
+                    Text(order.destination.address ?? 'Точка на карте',
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                )),
+              ]),
+              if (order.note != null && order.note!.trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0xFFFFF7E5), borderRadius: BorderRadius.circular(10)),
+                  child: Text('Комментарий: ${order.note!}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF684A1C))),
+                ),
+              ],
+              const SizedBox(height: 13),
+              SizedBox(width: double.infinity, child: FilledButton.icon(
+                onPressed: () => _acceptOrder(order),
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('Принять заказ'),
+              )),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 
@@ -424,15 +543,15 @@ class _DriverMapPageState extends State<DriverMapPage> {
   Widget _activeOrderCard(JibekOrderRequest order) {
     final next = _nextStatus(order.status);
     return Card(
-      color: const Color(0xFFEAF5F1),
+      color: const Color(0xFFFFF3D4),
       margin: const EdgeInsets.only(bottom: 14),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF16834A))),
+          const Text('МОЙ ЗАКАЗ', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1D7A50))),
           const SizedBox(height: 6),
           Text(_serviceLabel(order.service),
-              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF071B45))),
           const SizedBox(height: 4),
           Text(_statusLabel(order.status), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
@@ -477,7 +596,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
     return FilterChip(
       selected: selected,
       showCheckmark: false,
-      avatar: Icon(icon, size: 18, color: selected ? const Color(0xFF10243A) : const Color(0xFF687386)),
+      avatar: Icon(icon, size: 18, color: selected ? const Color(0xFF071B45) : const Color(0xFF687386)),
       label: Text(label),
       onSelected: (value) {
         setState(() {
@@ -496,7 +615,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
           }
         }
       },
-      selectedColor: const Color(0xFFE8D5AC),
+      selectedColor: const Color(0xFFFFE7A0),
       side: BorderSide(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
     );
   }

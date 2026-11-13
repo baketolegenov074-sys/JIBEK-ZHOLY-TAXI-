@@ -10,14 +10,46 @@ class JibekOwnerAdminApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'ЖІБЕК ЖОЛЫ — Владелец',
         debugShowCheckedModeBanner: false,
-        theme: JibekTheme.light(),
+        theme: JibekTheme.light().copyWith(
+          cardTheme: CardThemeData(
+            color: Colors.white,
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFE6EBF3)),
+            ),
+          ),
+          inputDecorationTheme: JibekTheme.light().inputDecorationTheme.copyWith(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE1E7F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: JibekTheme.gold, width: 1.6),
+            ),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              minimumSize: const Size(0, 48),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              minimumSize: const Size(0, 44),
+            ),
+          ),
+        ),
         home: const OwnerAdminHomePage(),
       );
 }
 
 class OwnerAdminHomePage extends StatefulWidget {
   const OwnerAdminHomePage({super.key});
-
   @override
   State<OwnerAdminHomePage> createState() => _OwnerAdminHomePageState();
 }
@@ -40,155 +72,201 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
     super.dispose();
   }
 
-  void _showNotice(String message) {
+  void _notice(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
+  void _goTo(int index) => setState(() => _tab = index);
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
+          toolbarHeight: 72,
           title: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ЖІБЕК ЖОЛЫ', style: TextStyle(fontWeight: FontWeight.w900)),
+              Text('ЖІБЕК ЖОЛЫ', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .4)),
+              SizedBox(height: 3),
               Text('ПАНЕЛЬ ВЛАДЕЛЬЦА',
-                  style: TextStyle(fontSize: 10, letterSpacing: 1.3)),
+                  style: TextStyle(fontSize: 10, letterSpacing: 1.4, color: JibekTheme.goldLight, fontWeight: FontWeight.w800)),
             ],
           ),
           actions: [
             IconButton(
-              tooltip: 'Обновить',
-              onPressed: () => _showNotice('Нет подключения к серверу владельца'),
-              icon: const Icon(Icons.refresh),
+              tooltip: 'Уведомления',
+              onPressed: () => _notice('Новых уведомлений пока нет'),
+              icon: const Icon(Icons.notifications_none_rounded),
             ),
+            const SizedBox(width: 8),
           ],
         ),
         body: SafeArea(
           child: IndexedStack(
             index: _tab,
-            children: [
-              _dashboard(),
-              _tariffs(),
-              _driversPage(),
-            ],
+            children: [_dashboard(), _tariffs(), _driversPage()],
           ),
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _tab,
-          onDestinationSelected: (value) => setState(() => _tab = value),
+          onDestinationSelected: _goTo,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Обзор'),
-            NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments), label: 'Тарифы'),
-            NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups), label: 'Водители'),
+            NavigationDestination(icon: Icon(Icons.grid_view_rounded), selectedIcon: Icon(Icons.grid_view_rounded), label: 'Обзор'),
+            NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments_rounded), label: 'Тарифы'),
+            NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups_rounded), label: 'Водители'),
           ],
         ),
       );
 
   Widget _dashboard() => ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
         children: [
-          const Text('Добро пожаловать',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 6),
-          const Text('Управление службой такси и сервисами',
-              style: TextStyle(color: Color(0xFF687386))),
-          const SizedBox(height: 18),
-          _statusBanner(),
-          const SizedBox(height: 18),
-          const Row(
+          Row(
             children: [
-              Expanded(child: _MetricCard(title: 'Заказы сегодня', value: '—', icon: Icons.receipt_long)),
-              SizedBox(width: 10),
-              Expanded(child: _MetricCard(title: 'Водители онлайн', value: '—', icon: Icons.local_taxi)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Row(
-            children: [
-              Expanded(child: _MetricCard(title: 'Выручка', value: '— ₸', icon: Icons.account_balance_wallet_outlined)),
-              SizedBox(width: 10),
-              Expanded(child: _MetricCard(title: 'Комиссия', value: '— ₸', icon: Icons.percent)),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Добро пожаловать', style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 4),
+                  Text('Центр управления', style: Theme.of(context).textTheme.headlineMedium),
+                ]),
+              ),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF2CC),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.admin_panel_settings_rounded, color: JibekTheme.navy, size: 27),
+              ),
             ],
           ),
           const SizedBox(height: 20),
-          const Text('Сервисы платформы',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          _statusBanner(),
+          const SizedBox(height: 24),
+          _sectionTitle('Состояние платформы', 'Данные появятся после подключения сервера'),
+          const SizedBox(height: 12),
+          const Row(children: [
+            Expanded(child: _MetricCard(title: 'Заказы сегодня', value: '—', icon: Icons.receipt_long_rounded)),
+            SizedBox(width: 12),
+            Expanded(child: _MetricCard(title: 'Водители онлайн', value: '—', icon: Icons.local_taxi_rounded)),
+          ]),
+          const SizedBox(height: 12),
+          const Row(children: [
+            Expanded(child: _MetricCard(title: 'Выручка', value: '— ₸', icon: Icons.account_balance_wallet_outlined)),
+            SizedBox(width: 12),
+            Expanded(child: _MetricCard(title: 'Комиссия', value: '— ₸', icon: Icons.percent_rounded)),
+          ]),
+          const SizedBox(height: 24),
+          _sectionTitle('Быстрый доступ', 'Основные инструменты владельца'),
+          const SizedBox(height: 12),
+          _QuickAction(
+            icon: Icons.tune_rounded,
+            title: 'Управление тарифами',
+            subtitle: 'Цена за километр, подача и комиссия',
+            onTap: () => _goTo(1),
+          ),
           const SizedBox(height: 10),
-          const _ServiceRow(icon: Icons.local_taxi, title: 'Городское такси', subtitle: 'Поездки по Шымкенту'),
-          const _ServiceRow(icon: Icons.route, title: 'Межгород', subtitle: 'Поездки по Казахстану'),
+          _QuickAction(
+            icon: Icons.verified_user_outlined,
+            title: 'Заявки водителей',
+            subtitle: 'Просмотр демонстрационных профилей',
+            onTap: () => _goTo(2),
+          ),
+          const SizedBox(height: 24),
+          _sectionTitle('Сервисы платформы', 'Направления работы ЖІБЕК ЖОЛЫ'),
+          const SizedBox(height: 12),
+          const _ServiceRow(icon: Icons.local_taxi_rounded, title: 'Городское такси', subtitle: 'Поездки по городу'),
+          const SizedBox(height: 8),
+          const _ServiceRow(icon: Icons.route_rounded, title: 'Межгород', subtitle: 'Поездки между городами'),
+          const SizedBox(height: 8),
           const _ServiceRow(icon: Icons.inventory_2_outlined, title: 'Доставка посылок', subtitle: 'Передача и доставка отправлений'),
+          const SizedBox(height: 8),
           const _ServiceRow(icon: Icons.car_crash_outlined, title: 'Эвакуатор', subtitle: 'Помощь на дороге'),
-          const _ServiceRow(icon: Icons.tire_repair, title: 'Выездной шиномонтаж', subtitle: 'Помощь с колёсами'),
+          const SizedBox(height: 8),
+          const _ServiceRow(icon: Icons.tire_repair_rounded, title: 'Выездной шиномонтаж', subtitle: 'Помощь с колёсами'),
+        ],
+      );
+
+  Widget _sectionTitle(String title, String subtitle) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: JibekTheme.ink)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: JibekTheme.muted)),
         ],
       );
 
   Widget _statusBanner() => Container(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF4DE),
+          color: const Color(0xFFFFF5DF),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF0D99E)),
         ),
-        child: const Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.info_outline, color: Color(0xFF9A6818)),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Демонстрационный режим. Тарифы пока редактируются только на экране; серверное сохранение и реальные показатели подключим после настройки защищённого доступа владельца.',
-                style: TextStyle(height: 1.35, color: Color(0xFF684A1C)),
-              ),
+        child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(Icons.info_outline_rounded, color: Color(0xFF936516), size: 21),
+          SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Демонстрационный режим', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF684A1C))),
+            SizedBox(height: 5),
+            Text(
+              'Панель пока не получает данные с сервера. Тарифы и статусы водителей на этом экране не публикуются и не меняют реальные поездки.',
+              style: TextStyle(height: 1.4, fontSize: 12, color: Color(0xFF684A1C)),
             ),
-          ],
-        ),
+          ])),
+        ]),
       );
 
   Widget _tariffs() => ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
         children: [
-          const Text('Тарифы и комиссия',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          const Text('Черновые значения для настройки. Пока не опубликованы.',
-              style: TextStyle(color: Color(0xFF687386))),
+          Text('Тарифы', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 6),
+          const Text('Черновые параметры платформы', style: TextStyle(color: JibekTheme.muted)),
           const SizedBox(height: 20),
-          _numberField('Цена за километр (₸)', _perKm, suffix: '₸/км'),
-          const SizedBox(height: 14),
-          _numberField('Подача автомобиля (₸)', _pickup, suffix: '₸'),
-          const SizedBox(height: 14),
-          _numberField('Комиссия платформы (%)', _commission, suffix: '%'),
-          const SizedBox(height: 20),
+          _statusBanner(),
+          const SizedBox(height: 24),
+          _numberField('Цена за километр', _perKm, suffix: '₸/км'),
+          const SizedBox(height: 16),
+          _numberField('Подача автомобиля', _pickup, suffix: '₸'),
+          const SizedBox(height: 16),
+          _numberField('Комиссия платформы', _commission, suffix: '%'),
+          const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () {
               final values = [_perKm.text, _pickup.text, _commission.text];
-              final valid = values.every((v) => double.tryParse(v.replaceAll(',', '.')) != null);
-              if (!valid) {
-                _showNotice('Проверьте введённые числовые значения');
+              final parsed = values.map((v) => double.tryParse(v.replaceAll(',', '.'))).toList();
+              if (parsed.any((v) => v == null || !v.isFinite || v < 0)) {
+                _notice('Введите корректные неотрицательные числа');
                 return;
               }
-              _showNotice('Черновик проверен. Для публикации нужно подключить сервер владельца.');
+              if (parsed.last! > 100) {
+                _notice('Комиссия не может превышать 100%');
+                return;
+              }
+              _notice('Черновик проверен. Сохранение станет доступно после подключения сервера.');
             },
-            icon: const Icon(Icons.save_outlined),
-            label: const Text('Проверить настройки'),
+            icon: const Icon(Icons.fact_check_outlined),
+            label: const Text('Проверить параметры'),
           ),
           const SizedBox(height: 12),
-          const Text('Изменения сейчас не влияют на стоимость поездок.',
-              style: TextStyle(color: Color(0xFF9A6818), fontSize: 12)),
+          const Text('Изменения сохраняются только в текущем открытом экране.',
+              style: TextStyle(fontSize: 12, color: JibekTheme.muted)),
         ],
       );
 
-  Widget _numberField(String label, TextEditingController controller, {required String suffix}) =>
-      Column(
+  Widget _numberField(String label, TextEditingController controller, {required String suffix}) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 7),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w800, color: JibekTheme.ink)),
+          const SizedBox(height: 8),
           TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
+              hintText: 'Введите значение',
               suffixText: suffix,
               prefixIcon: const Icon(Icons.edit_outlined),
             ),
@@ -197,51 +275,28 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
       );
 
   Widget _driversPage() => ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
         children: [
-          const Text('Водители',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          const Text('Макет проверки заявок водителей',
-              style: TextStyle(color: Color(0xFF687386))),
-          const SizedBox(height: 16),
-          ..._drivers.map((driver) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        const CircleAvatar(child: Icon(Icons.person_outline)),
-                        const SizedBox(width: 12),
-                        Expanded(child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(driver.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                            Text(driver.details, style: const TextStyle(fontSize: 12, color: Color(0xFF687386))),
-                          ],
-                        )),
-                        Chip(label: Text(driver.approved ? 'Одобрен' : 'Ожидает')),
-                      ]),
-                      const SizedBox(height: 10),
-                      Row(children: [
-                        Expanded(child: OutlinedButton(
-                          onPressed: () => _showNotice('Проверка документов будет доступна после подключения базы'),
-                          child: const Text('Документы'),
-                        )),
-                        const SizedBox(width: 8),
-                        Expanded(child: FilledButton(
-                          onPressed: () => setState(() => driver.approved = !driver.approved),
-                          child: Text(driver.approved ? 'Отозвать' : 'Одобрить (макет)'),
-                        )),
-                      ]),
-                    ],
-                  ),
+          Text('Водители', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 6),
+          const Text('Демонстрационные заявки для проверки интерфейса',
+              style: TextStyle(color: JibekTheme.muted)),
+          const SizedBox(height: 18),
+          _statusBanner(),
+          const SizedBox(height: 20),
+          ..._drivers.map((driver) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _DriverCard(
+                  driver: driver,
+                  onDocuments: () => _notice('Документы будут доступны после подключения базы'),
+                  onToggle: () => setState(() => driver.approved = !driver.approved),
                 ),
               )),
-          const SizedBox(height: 10),
-          const Text('Кнопка одобрения пока меняет только демонстрационный экран и не выдаёт доступ к реальным заказам.',
-              style: TextStyle(fontSize: 12, color: Color(0xFF9A6818))),
+          const SizedBox(height: 4),
+          const Text(
+            'Статус одобрения меняется только в демонстрационном интерфейсе и не выдаёт доступ к реальным заказам.',
+            style: TextStyle(fontSize: 12, height: 1.4, color: JibekTheme.muted),
+          ),
         ],
       );
 }
@@ -262,16 +317,101 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: const Color(0xFF168C8C)),
-              const SizedBox(height: 12),
-              Text(value, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
-              Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF687386))),
-            ],
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(color: const Color(0xFFFFF3D2), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: const Color(0xFF9B741F), size: 21),
+            ),
+            const SizedBox(height: 16),
+            Text(value, style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900, color: JibekTheme.navy)),
+            const SizedBox(height: 4),
+            Text(title, style: const TextStyle(fontSize: 12, color: JibekTheme.muted)),
+          ]),
+        ),
+      );
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({required this.icon, required this.title, required this.subtitle, required this.onTap});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(color: const Color(0xFFFFF3D2), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: JibekTheme.navy, size: 23),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: JibekTheme.ink)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(fontSize: 12, color: JibekTheme.muted)),
+              ])),
+              const Icon(Icons.chevron_right_rounded, color: JibekTheme.gold, size: 25),
+            ]),
           ),
+        ),
+      );
+}
+
+class _DriverCard extends StatelessWidget {
+  const _DriverCard({required this.driver, required this.onDocuments, required this.onToggle});
+  final _DriverRecord driver;
+  final VoidCallback onDocuments;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: const Color(0xFFF0F3F8), borderRadius: BorderRadius.circular(14)),
+                child: const Icon(Icons.person_outline_rounded, color: JibekTheme.navy),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(driver.name, style: const TextStyle(fontWeight: FontWeight.w900, color: JibekTheme.ink)),
+                const SizedBox(height: 3),
+                Text(driver.details, style: const TextStyle(fontSize: 12, color: JibekTheme.muted)),
+              ])),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: driver.approved ? const Color(0xFFE5F5EB) : const Color(0xFFFFF3D9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  driver.approved ? 'Одобрен' : 'Ожидает',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+                    color: driver.approved ? const Color(0xFF287447) : const Color(0xFF8A6418)),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: OutlinedButton(onPressed: onDocuments, child: const Text('Документы'))),
+              const SizedBox(width: 10),
+              Expanded(child: FilledButton(onPressed: onToggle, child: Text(driver.approved ? 'Отозвать' : 'Одобрить (макет)'))),
+            ]),
+          ]),
         ),
       );
 }
@@ -284,10 +424,23 @@ class _ServiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        child: ListTile(
-          leading: Icon(icon, color: const Color(0xFF168C8C)),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: Text(subtitle),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(color: const Color(0xFFF0F3F8), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: JibekTheme.navy, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: JibekTheme.ink)),
+              const SizedBox(height: 3),
+              Text(subtitle, style: const TextStyle(fontSize: 12, color: JibekTheme.muted)),
+            ])),
+            const Icon(Icons.chevron_right_rounded, color: JibekTheme.gold),
+          ]),
         ),
       );
 }
