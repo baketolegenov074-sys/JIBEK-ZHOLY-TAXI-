@@ -225,7 +225,6 @@ jobs:
               ET.register_namespace("android", android_ns)
               ET.register_namespace("tools", tools_ns)
               root = ET.fromstring(manifest)
-              root.set("xmlns:tools", tools_ns)
               for permission in [
                   "android.permission.ACCESS_BACKGROUND_LOCATION",
                   "android.permission.RECORD_AUDIO",
