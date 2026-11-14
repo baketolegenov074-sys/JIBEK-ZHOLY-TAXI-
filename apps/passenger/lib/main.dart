@@ -32,10 +32,11 @@ class PlaceResult {
 }
 
 class PassengerMapPage extends StatefulWidget {
-  const PassengerMapPage({super.key, this.initialService = JibekServiceType.cityTaxi, this.initialDestination});
+  const PassengerMapPage({super.key, this.initialService = JibekServiceType.cityTaxi, this.initialDestination, this.initialNote});
 
   final JibekServiceType initialService;
   final String? initialDestination;
+  final String? initialNote;
 
   @override
   State<PassengerMapPage> createState() => _PassengerMapPageState();
@@ -74,6 +75,10 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   void initState() {
     super.initState();
     _service = widget.initialService;
+    final initialNote = widget.initialNote?.trim();
+    if (initialNote != null && initialNote.isNotEmpty) {
+      _noteController.text = initialNote;
+    }
     final destination = widget.initialDestination?.trim();
     if (destination != null && destination.isNotEmpty) {
       _toController.text = destination;
