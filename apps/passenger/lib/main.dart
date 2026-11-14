@@ -32,9 +32,10 @@ class PlaceResult {
 }
 
 class PassengerMapPage extends StatefulWidget {
-  const PassengerMapPage({super.key, this.initialService = JibekServiceType.cityTaxi});
+  const PassengerMapPage({super.key, this.initialService = JibekServiceType.cityTaxi, this.initialDestination});
 
   final JibekServiceType initialService;
+  final String? initialDestination;
 
   @override
   State<PassengerMapPage> createState() => _PassengerMapPageState();
@@ -73,6 +74,13 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   void initState() {
     super.initState();
     _service = widget.initialService;
+    final destination = widget.initialDestination?.trim();
+    if (destination != null && destination.isNotEmpty) {
+      _toController.text = destination;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchDestination();
+      });
+    }
     _restoreSavedOrder();
   }
 
