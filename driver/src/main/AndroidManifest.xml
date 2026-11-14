@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application android:theme="@android:style/Theme.Material.Light.NoActionBar"
-        android:label="Жібек Жолы — Жүргізуші"
+        android:label="Bake Taxi Водитель"
         android:icon="@drawable/ic_launcher_driver"
         android:roundIcon="@drawable/ic_launcher_driver">
         <activity android:name=".MainActivity" android:exported="true">
