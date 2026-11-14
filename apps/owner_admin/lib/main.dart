@@ -8,7 +8,7 @@ class JibekOwnerAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'ЖІБЕК ЖОЛЫ — Владелец',
+        title: 'Bake Taxi Админ',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
         home: const OwnerAdminHomePage(),
@@ -52,7 +52,7 @@ class _OwnerAdminHomePageState extends State<OwnerAdminHomePage> {
           title: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ЖІБЕК ЖОЛЫ', style: TextStyle(fontWeight: FontWeight.w900)),
+              Text('Bake Taxi Админ', style: TextStyle(fontWeight: FontWeight.w900)),
               Text('ПАНЕЛЬ ВЛАДЕЛЬЦА',
                   style: TextStyle(fontSize: 10, letterSpacing: 1.3)),
             ],
