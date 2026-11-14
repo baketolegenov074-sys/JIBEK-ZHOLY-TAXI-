@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DB_PATH = Path(os.getenv("JIBEK_DB_PATH", BASE_DIR / "jibek.sqlite3"))
 _LOCK = threading.RLock()
 
-Service = Literal["cityTaxi", "intercity", "parcel", "towTruck", "mobileTire"]
+Service = Literal["cityTaxi", "intercity", "parcel", "freight", "towTruck", "mobileTire"]
 Status = Literal["searching", "accepted", "driverArriving", "inProgress", "completed", "cancelled"]
 ALLOWED_TRANSITIONS = {
     "accepted": {"driverArriving", "cancelled"},
@@ -51,9 +51,10 @@ class OrderCreate(BaseModel):
     @classmethod
     def require_details_for_assistance_services(cls, value, info):
         service = info.data.get("service")
-        if service in {"parcel", "towTruck", "mobileTire"} and not (value or "").strip():
+        if service in {"parcel", "freight", "towTruck", "mobileTire"} and not (value or "").strip():
             messages = {
                 "parcel": "Опишите посылку и что нужно доставить",
+                "freight": "Опишите груз, габариты и адрес доставки",
                 "towTruck": "Укажите автомобиль и характер поломки",
                 "mobileTire": "Укажите размер колёс и проблему",
             }
