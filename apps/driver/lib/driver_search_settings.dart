@@ -49,6 +49,7 @@ class _DriverSearchSettingsState extends State<_DriverSearchSettings> {
           mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 2.2,
           children: [
             _tariff('Межгород'), _tariff('Эконом'), _tariff('Комфорт'), _tariff('Доставка'),
+            _tariff('Грузовой'), _tariff('Эвакуатор'), _tariff('Шиномонтаж'),
             _tariff('Перевозка домашних животных', wide: true),
           ],
         ),
