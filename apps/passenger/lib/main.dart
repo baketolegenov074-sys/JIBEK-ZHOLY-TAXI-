@@ -472,6 +472,23 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                             Text('Статус: ${_statusLabel(_createdOrder!.status)}',
                                 style: const TextStyle(fontWeight: FontWeight.w800)),
                             const SizedBox(height: 8),
+                            Row(children: [
+                              const Icon(Icons.payments_rounded, color: Color(0xFF10243A)),
+                              const SizedBox(width: 7),
+                              Text('${_createdOrder!.priceKzt} ₸', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                              const Spacer(),
+                              if (_createdOrder!.isBoosted) const Chip(avatar: Icon(Icons.local_fire_department, color: Colors.deepOrange, size: 18), label: Text('Повышена')),
+                            ]),
+                            if (_createdOrder!.status == JibekOrderStatus.searching) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(width: double.infinity, child: FilledButton.icon(
+                                onPressed: _refreshingOrder || _cancellingOrder ? null : _boostOrder,
+                                icon: const Icon(Icons.local_fire_department_rounded),
+                                label: const Text('+250 ₸ — ускорить поиск'),
+                                style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A00), foregroundColor: Colors.white),
+                              )),
+                            ],
+                            const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
                               children: [
@@ -737,6 +754,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         createdAt: DateTime.now(),
         vehicleClass: _service == JibekServiceType.cityTaxi ? _class : null,
         note: orderNote.isEmpty ? null : orderNote,
+        priceKzt: 250,
       );
       final validation = draft.validate();
       if (validation != null) { _message(validation); return; }
@@ -825,6 +843,23 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         baseUrl: _apiUrl,
         devUserIdProvider: () async => _devUserId,
       );
+
+  Future<void> _boostOrder() async {
+    final order = _createdOrder;
+    if (order == null || order.status != JibekOrderStatus.searching || _apiUrl.isEmpty || _devUserId.isEmpty) return;
+    setState(() => _refreshingOrder = true);
+    final repository = _orderRepository();
+    try {
+      final updated = await repository.boostOrder(orderId: order.id, amountKzt: 250);
+      if (!mounted) return;
+      setState(() => _createdOrder = updated);
+      await _saveOrderState(updated);
+      _message('Цена увеличена до ${updated.priceKzt} ₸');
+    } on JibekApiException catch (e) {
+      _message('Не удалось повысить цену: ${e.message}');
+    } catch (_) { _message('Нет связи с сервером. Цена не изменена.'); }
+    finally { repository.close(); if (mounted) setState(() => _refreshingOrder = false); }
+  }
 
   Future<void> _refreshOrder() async {
     final order = _createdOrder;
