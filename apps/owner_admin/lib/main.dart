@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jibek_shared/jibek_shared.dart';
+import 'permissions/startup_permissions.dart';
 
 void main() => runApp(const BakeTaxiOwnerApp());
 
@@ -41,6 +42,14 @@ class OwnerShell extends StatefulWidget {
 
 class _OwnerShellState extends State<OwnerShell> {
   int tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      requestBakeTaxiPermissions();
+    });
+  }
   final pages = const [OverviewPage(), DriversPage(), OrdersPage(), TariffsPage(), CashSosPage()];
   final labels = const ['Обзор', 'Водители', 'Заказы', 'Тарифы', 'Касса / SOS'];
   final icons = const [Icons.dashboard_rounded, Icons.groups_rounded, Icons.receipt_long_rounded,
