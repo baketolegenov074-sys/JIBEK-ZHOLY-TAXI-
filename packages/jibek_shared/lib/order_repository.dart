@@ -93,6 +93,9 @@ class DevJibekApiRepository implements JibekOrderRepository {
         createdAt: DateTime.parse(json['createdAt'] as String),
         vehicleClass: json['vehicleClass'] as String?,
         note: json['note'] as String?,
+        stops: (json['stops'] as List<dynamic>? ?? const [])
+            .map((item) => JibekGeoPoint.fromJson(Map<String, Object?>.from(item as Map)))
+            .toList(growable: false),
         passengerId: json['passengerId'] as String?,
         status: JibekOrderStatus.values.byName(json['status'] as String),
       );
