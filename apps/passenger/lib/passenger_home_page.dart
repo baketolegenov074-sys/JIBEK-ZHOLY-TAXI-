@@ -4,6 +4,8 @@ import 'main.dart';
 
 const _ink = Color(0xFF17212B);
 const _gold = Color(0xFFFFD400);
+const _surface = Colors.white;
+const _page = Color(0xFFF7F7F5);
 const _muted = Color(0xFF687386);
 
 class PassengerHomePage extends StatelessWidget {
@@ -17,7 +19,7 @@ class PassengerHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF5F6F8),
+    backgroundColor: _page,
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
@@ -43,10 +45,10 @@ class PassengerHomePage extends StatelessWidget {
             crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.45,
             children: [
-              _ServiceCard(title: 'Такси', subtitle: 'от 4 мин', icon: Icons.local_taxi_rounded, color: const Color(0xFFFFE68A), onTap: () => _open(context, JibekServiceType.cityTaxi)),
-              _ServiceCard(title: 'Доставка', subtitle: 'Посылка', icon: Icons.inventory_2_rounded, color: const Color(0xFFDCEBFF), onTap: () => _open(context, JibekServiceType.parcel)),
-              _ServiceCard(title: 'Межгород', subtitle: 'В другой город', icon: Icons.route_rounded, color: const Color(0xFFE8DDFB), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercityPage()))),
-              _ServiceCard(title: 'Грузовой', subtitle: 'Перевозка вещей', icon: Icons.local_shipping_rounded, color: const Color(0xFFDDF2E4), onTap: () => _open(context, JibekServiceType.freight)),
+              _ServiceCard(title: 'Такси', subtitle: 'от 4 мин', icon: Icons.local_taxi_rounded, color: const Color(0xFFFFF0A8), onTap: () => _open(context, JibekServiceType.cityTaxi)),
+              _ServiceCard(title: 'Доставка', subtitle: 'Посылка', icon: Icons.inventory_2_rounded, color: const Color(0xFFFFF8D9), onTap: () => _open(context, JibekServiceType.parcel)),
+              _ServiceCard(title: 'Межгород', subtitle: 'В другой город', icon: Icons.route_rounded, color: const Color(0xFFFFF8D9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercityPage()))),
+              _ServiceCard(title: 'Грузовой', subtitle: 'Перевозка вещей', icon: Icons.local_shipping_rounded, color: const Color(0xFFFFF0A8), onTap: () => _open(context, JibekServiceType.freight)),
             ],
           ),
           const SizedBox(height: 20),
@@ -94,13 +96,13 @@ class _ServiceCard extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white, borderRadius: BorderRadius.circular(22),
+    color: _surface, borderRadius: BorderRadius.circular(22),
     child: InkWell(
       onTap: onTap, borderRadius: BorderRadius.circular(22),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(width: 46, height: 46, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(15)), child: Icon(icon, color: _ink, size: 27)),
+          Container(width: 46, height: 46, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFFFE17A))), child: Icon(icon, color: _ink, size: 27)),
           const Spacer(),
           Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: _ink)),
           Text(subtitle, style: const TextStyle(fontSize: 12, color: _muted)),
@@ -151,8 +153,8 @@ class _IntercityPageState extends State<IntercityPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF5F6F8),
-    appBar: AppBar(title: const Text('Межгород'), backgroundColor: Colors.white, foregroundColor: _ink),
+    backgroundColor: _page,
+    appBar: AppBar(title: const Text('Межгород', style: TextStyle(fontWeight: FontWeight.w900)), backgroundColor: _surface, foregroundColor: _ink, elevation: 0),
     body: ListView(padding: const EdgeInsets.all(18), children: [
       const Text('Куда поедем?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: _ink)),
       const SizedBox(height: 16),
@@ -160,7 +162,7 @@ class _IntercityPageState extends State<IntercityPage> {
       const SizedBox(height: 10),
       TextField(controller: _destination, decoration: const InputDecoration(prefixIcon: Icon(Icons.location_on), labelText: 'Куда', hintText: 'Введите город')),
       const SizedBox(height: 20),
-      Card(child: Column(children: [
+      Card(color: _surface, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Color(0xFFEDEDE8))), child: Column(children: [
         RadioListTile<String>(value: 'Место в машине', groupValue: _tripType, onChanged: (v) => setState(() => _tripType = v ?? 'Место в машине'), title: const Text('С попутчиками', style: TextStyle(fontWeight: FontWeight.w900)), subtitle: const Text('Место в машине')),
         Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
@@ -173,7 +175,7 @@ class _IntercityPageState extends State<IntercityPage> {
         const Text('Цена будет рассчитана по маршруту', style: TextStyle(color: _muted, fontSize: 12)),
       ])),
       ])),
-      Card(child: RadioListTile<String>(
+      Card(color: _surface, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Color(0xFFEDEDE8))), child: RadioListTile<String>(
         value: 'Весь салон', groupValue: _tripType, onChanged: (v) => setState(() => _tripType = v ?? 'Место в машине'),
         title: const Text('Весь салон', style: TextStyle(fontWeight: FontWeight.w900)),
         subtitle: const Text('Отдельная машина для вашей поездки • цена рассчитывается по маршруту'),
