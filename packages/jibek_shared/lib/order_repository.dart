@@ -103,6 +103,8 @@ class DevJibekApiRepository implements JibekOrderRepository {
         'destination': order.destination.toJson(),
         if (order.vehicleClass != null) 'vehicleClass': order.vehicleClass,
         if (order.note != null) 'note': order.note,
+        if (order.stops.isNotEmpty)
+          'stops': order.stops.map((point) => point.toJson()).toList(),
       };
 
   @override
