@@ -44,8 +44,7 @@ class PassengerMapPage extends StatefulWidget {
 
 class _PassengerMapPageState extends State<PassengerMapPage> {
   final MapController _mapController = MapController();
-  final TextEditingController _fromController =
-      TextEditingController(text: 'Моё местоположение');
+  final TextEditingController _fromController = TextEditingController();
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   final TextEditingController _stopController = TextEditingController();
@@ -88,6 +87,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       });
     }
     _restoreSavedOrder();
+    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted && _fromController.text.trim().isEmpty) _findMe(); });
   }
 
   @override
@@ -124,9 +124,33 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       }
       final position = await Geolocator.getCurrentPosition();
       final point = LatLng(position.latitude, position.longitude);
+      final reverseUri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
+        'lat': position.latitude.toString(),
+        'lon': position.longitude.toString(),
+        'format': 'jsonv2',
+        'accept-language': 'ru',
+        'zoom': '18',
+      });
+      final reverseResponse = await http.get(reverseUri, headers: {
+        'User-Agent': 'BakeTaxiPassenger/1.0',
+        'Accept': 'application/json',
+      });
+      var addressText = '';
+      if (reverseResponse.statusCode == 200) {
+        final reverseData = jsonDecode(reverseResponse.body) as Map<String, dynamic>;
+        final address = reverseData['address'] as Map<String, dynamic>? ?? {};
+        final road = address['road'] ?? address['pedestrian'] ?? address['residential'];
+        final house = address['house_number'];
+        final district = address['suburb'] ?? address['neighbourhood'];
+        final city = address['city'] ?? address['town'] ?? address['village'] ?? 'Шымкент';
+        addressText = [if (road != null) road, if (house != null) house, if (district != null) district, city]
+            .map((part) => part.toString()).join(', ');
+        if (addressText.isEmpty) addressText = reverseData['display_name']?.toString() ?? '';
+      }
+      if (addressText.isEmpty) addressText = 'Точка на карте, Шымкент';
       setState(() {
         _fromPoint = point;
-        _fromController.text = 'Моё местоположение';
+        _fromController.text = addressText;
       });
       _mapController.move(point, 15);
       if (_toPoint != null) await _buildRoute();
@@ -398,7 +422,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   const SizedBox(height: 16),
                   const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
                   const SizedBox(height: 14),
-                  _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom(), onChanged: (_) { setState(() { _fromPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
+                  _placeField(Icons.radio_button_checked, 'Откуда забрать?', _fromController, onSubmitted: (_) => _searchFrom(), onChanged: (_) { setState(() { _fromPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
                   const SizedBox(height: 9),
                   _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination(), onChanged: (_) { setState(() { _toPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
                   Align(alignment: Alignment.centerRight, child: TextButton.icon(
@@ -915,6 +939,11 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         hintText: hint,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
+        suffixIcon: controller.text.isEmpty ? null : IconButton(
+          tooltip: 'Очистить адрес',
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () { controller.clear(); onChanged?.call(''); },
+        ),
       ),
     );
   }
