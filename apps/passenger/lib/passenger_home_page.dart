@@ -22,7 +22,7 @@ class PassengerHomePage extends StatefulWidget {
 }
 
 class _PassengerHomePageState extends State<PassengerHomePage> {
-  String _currentAddress = 'Шымкент • Нажмите, чтобы определить адрес';
+  String _currentAddress = '';
   bool _loadingAddress = false;
 
   @override
@@ -127,7 +127,7 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
                 const Icon(Icons.location_on_rounded, color: Color(0xFFB58A16), size: 18),
                 const SizedBox(width: 5),
                 Expanded(child: Text(
-                  _loadingAddress ? 'Определяем ваше местоположение…' : _currentAddress,
+                  _loadingAddress ? 'Определяем адрес…' : (_currentAddress.isEmpty ? 'Нажмите, чтобы определить адрес' : _currentAddress),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: _muted, fontSize: 12),
