@@ -218,6 +218,7 @@ class _TariffsPageState extends State<TariffsPage> {
     'Комиссия сервиса (%)': TextEditingController(text: '10'),
   };
   bool unlocked = false;
+  bool _showPin = false;
   @override
   void dispose() { pin.dispose(); for (final c in fields.values) { c.dispose(); } super.dispose(); }
 
@@ -235,8 +236,21 @@ class _TariffsPageState extends State<TariffsPage> {
         const SizedBox(height: 6),
         const Text('Для настоящей проверки PIN сначала нужен защищённый сервер владельца.'),
         const SizedBox(height: 12),
-        TextField(controller: pin, obscureText: true, keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'PIN-код владельца')),
+        TextField(
+          controller: pin,
+          obscureText: !_showPin,
+          keyboardType: TextInputType.visiblePassword,
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: InputDecoration(
+            labelText: 'Пароль владельца',
+            suffixIcon: IconButton(
+              tooltip: _showPin ? 'Скрыть пароль' : 'Показать пароль',
+              onPressed: () => setState(() => _showPin = !_showPin),
+              icon: Icon(_showPin ? Icons.visibility_off : Icons.visibility),
+            ),
+          ),
+        ),
         const SizedBox(height: 10),
         OutlinedButton(onPressed: () => _notice(context, 'PIN не проверяется: серверная авторизация ещё не настроена'),
           child: const Text('Проверить PIN')),
