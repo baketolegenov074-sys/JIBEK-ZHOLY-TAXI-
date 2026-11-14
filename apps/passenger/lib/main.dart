@@ -252,7 +252,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
           point: _fromPoint!,
           width: 42,
           height: 42,
-          child: const Icon(Icons.my_location, color: Color(0xFF168C8C), size: 32),
+          child: const Icon(Icons.my_location, color: Color(0xFF10243A), size: 32),
         ),
       if (_toPoint != null)
         Marker(
@@ -283,7 +283,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   Polyline(
                     points: _route,
                     strokeWidth: 5,
-                    color: const Color(0xFF168C8C),
+                    color: const Color(0xFF10243A),
                     borderStrokeWidth: 1.5,
                     borderColor: Colors.white,
                   ),
@@ -371,7 +371,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   ),
                   if (_createdOrder != null)
                     Card(
-                      color: const Color(0xFFEAF5F3),
+                      color: const Color(0xFFF1F4F7),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -418,9 +418,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   if (_distanceLabel != null && _durationLabel != null)
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: const Color(0xFFEAF5F3), borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(color: const Color(0xFFF1F4F7), borderRadius: BorderRadius.circular(14)),
                       child: Row(children: [
-                        const Icon(Icons.route, color: Color(0xFF168C8C)),
+                        const Icon(Icons.route, color: Color(0xFF10243A)),
                         const SizedBox(width: 10),
                         Text('$_distanceLabel  •  $_durationLabel', style: const TextStyle(fontWeight: FontWeight.w800)),
                       ]),
@@ -451,7 +451,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: Text(item.$2),
                       selected: _service == item.$1,
                       onSelected: (_) => setState(() => _service = item.$1),
-                      selectedColor: const Color(0xFFE8D5AC),
+                      selectedColor: const Color(0xFFE9EEF4),
                     )).toList(),
                   ),
                   if (_service == JibekServiceType.cityTaxi) ...[
@@ -464,9 +464,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       label: Text(item),
                       selected: _class == item,
                       onSelected: (_) => setState(() => _class = item),
-                      selectedColor: const Color(0xFFE8D5AC),
+                      selectedColor: const Color(0xFFE9EEF4),
                       labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF10243A) : const Color(0xFF657184)),
-                      side: BorderSide(color: _class == item ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
+                      side: BorderSide(color: _class == item ? const Color(0xFFE3BD70) : const Color(0xFFE1E6EC)),
                     )).toList(),
                   ),
                   ],
@@ -572,7 +572,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         width: 142, margin: const EdgeInsets.only(right: 9), padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFFFF4C2) : Colors.white,
-          border: Border.all(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC), width: selected ? 2 : 1),
+          border: Border.all(color: selected ? const Color(0xFFE3BD70) : const Color(0xFFE1E6EC), width: selected ? 2 : 1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -794,7 +794,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       textInputAction: TextInputAction.search,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: const Color(0xFF168C8C)),
+        prefixIcon: Icon(icon, color: const Color(0xFF10243A)),
         hintText: hint,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
