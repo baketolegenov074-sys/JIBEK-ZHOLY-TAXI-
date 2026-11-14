@@ -52,7 +52,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
+          sudo apt-get install -y imagemagick
 
           build_one() {
             local app_dir="$1"
@@ -71,7 +71,7 @@ jobs:
           import pathlib
           import subprocess
 
-          source = pathlib.Path("assets") / "launcher.svg"
+          source = pathlib.Path("assets") / "launcher.png"
           if not source.is_file():
               raise SystemExit(f"Missing launcher artwork: {source}")
           res = pathlib.Path("android/app/src/main/res")
@@ -88,8 +88,8 @@ jobs:
               for name in ("ic_launcher.png", "ic_launcher_round.png"):
                   target = target_dir / name
                   subprocess.run(
-                      ["rsvg-convert", "-w", str(size), "-h", str(size),
-                       "-o", str(target), str(source)],
+                      ["magick", str(source), "-resize", f"{size}x{size}^",
+                       "-gravity", "center", "-extent", f"{size}x{size}", str(target)],
                       check=True,
                   )
           # Disable generated adaptive-icon XML so Android uses the custom density PNGs.
@@ -97,8 +97,8 @@ jobs:
           if adaptive.exists():
               for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
                   (adaptive / name).unlink(missing_ok=True)
-          print(f"Installed branded launcher icons from {source}")
-          PY
+          print(f"Installed original PNG launcher artwork from {source}")
+                    PY
 
               # Keep the Android Kotlin compiler compatible with current Flutter plugins.
               python3 - <<'PY'
