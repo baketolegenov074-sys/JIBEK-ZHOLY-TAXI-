@@ -50,7 +50,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
+          sudo apt-get install -y librsvg2-bin python3-pil
 
           build_one() {
             local app_dir="$1"
@@ -58,6 +58,7 @@ jobs:
             local application_id="$3"
             local app_label="$4"
             local output_name="$5"
+            local icon_source="${6:-assets/launcher.svg}"
 
             echo "===== Preparing ${output_name} ====="
             (
@@ -65,11 +66,12 @@ jobs:
               flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
 
               # Install the selected branded launcher icon for this app.
-              python3 - <<'PY'
+              python3 - "$icon_source" <<'PY'
           import pathlib
-          import subprocess
+          import sys
+          from PIL import Image
 
-          source = pathlib.Path("assets") / "launcher.svg"
+          source = pathlib.Path(sys.argv[1])
           if not source.is_file():
               raise SystemExit(f"Missing launcher artwork: {source}")
           res = pathlib.Path("android/app/src/main/res")
@@ -80,16 +82,14 @@ jobs:
               "mipmap-xxhdpi": 144,
               "mipmap-xxxhdpi": 192,
           }
-          for folder, size in sizes.items():
-              target_dir = res / folder
-              target_dir.mkdir(parents=True, exist_ok=True)
-              for name in ("ic_launcher.png", "ic_launcher_round.png"):
-                  target = target_dir / name
-                  subprocess.run(
-                      ["rsvg-convert", "-w", str(size), "-h", str(size),
-                       "-o", str(target), str(source)],
-                      check=True,
-                  )
+          with Image.open(source) as original:
+              artwork = original.convert("RGBA")
+              for folder, size in sizes.items():
+                  target_dir = res / folder
+                  target_dir.mkdir(parents=True, exist_ok=True)
+                  resized = artwork.resize((size, size), Image.Resampling.LANCZOS)
+                  for name in ("ic_launcher.png", "ic_launcher_round.png"):
+                      resized.save(target_dir / name, format="PNG")
           # Disable generated adaptive-icon XML so Android uses the custom density PNGs.
           adaptive = res / "mipmap-anydpi-v26"
           if adaptive.exists():
@@ -176,8 +176,8 @@ jobs:
             echo "Created dist/$output_name"
           }
 
-          build_one apps/passenger client_taxi kz.jibekzholy.client "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk
-          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk
+          build_one apps/passenger client_taxi kz.jibekzholy.client "ЖІБЕК ЖОЛЫ — Пассажир" ClientTaxi.apk ../../apps/passenger_icon.png
+          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "ЖІБЕК ЖОЛЫ — Водитель" DriverTaxi.apk ../../apps/brand_icon.png
           build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "ЖІБЕК ЖОЛЫ — Владелец" OwnerAdmin.apk
 
           echo "===== APK files ====="
