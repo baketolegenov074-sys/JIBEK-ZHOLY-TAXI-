@@ -1,4 +1,4 @@
-name: JIBEK ZHOLY TAXI - Build 3 APKs
+name: Bake Taxi - Build 3 APKs
 
 on:
   push:
@@ -183,9 +183,9 @@ jobs:
             echo "Created dist/$output_name"
           }
 
-          build_one apps/passenger client_taxi kz.jibekzholy.client "Bake Taxi — Пассажир" ClientTaxi.apk ../../apps/passenger_icon.png
-          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "Bake Taxi — Водитель" DriverTaxi.apk ../../apps/brand_icon.png
-          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "Bake Taxi — Администратор" OwnerAdmin.apk
+          build_one apps/passenger client_taxi kz.jibekzholy.client "Bake Taxi" ClientTaxi.apk ../../apps/passenger_icon.png
+          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "Bake Taxi Водитель" DriverTaxi.apk ../../apps/brand_icon.png
+          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "Bake Taxi Админ" OwnerAdmin.apk ../../apps/admin_icon.png
 
           echo "===== APK files ====="
           ls -lh dist/*.apk
@@ -193,7 +193,7 @@ jobs:
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: JIBEK-ZHOLY-TAXI-APKs
+          name: Bake-Taxi-APKs
           path: dist/*.apk
           if-no-files-found: error
           retention-days: 30
