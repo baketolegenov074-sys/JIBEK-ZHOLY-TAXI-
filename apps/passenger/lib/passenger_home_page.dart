@@ -20,18 +20,18 @@ class PassengerHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _page,
+    drawer: const _PassengerDrawer(),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
         children: [
           Row(children: [
-            IconButton(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Меню Bake Taxi'))),
+            IconButton(onPressed: () => Scaffold.of(context).openDrawer(),
               icon: const Icon(Icons.menu_rounded, size: 28)),
             const Spacer(),
             const Text('Bake Taxi', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: .3, color: _ink)),
             const Spacer(),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.account_circle_outlined, size: 28)),
+            IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PassengerProfilePage())), icon: const Icon(Icons.account_circle_outlined, size: 28)),
           ]),
           const Row(children: [
             Icon(Icons.location_on_rounded, color: Color(0xFFB58A16), size: 18),
@@ -47,8 +47,8 @@ class PassengerHomePage extends StatelessWidget {
             children: [
               _ServiceCard(title: 'Такси', subtitle: 'от 4 мин', icon: Icons.local_taxi_rounded, color: const Color(0xFFEAF0F6), onTap: () => _open(context, JibekServiceType.cityTaxi)),
               _ServiceCard(title: 'Доставка', subtitle: 'Посылка', icon: Icons.inventory_2_rounded, color: const Color(0xFFF2F4F7), onTap: () => _open(context, JibekServiceType.parcel)),
-              _ServiceCard(title: 'Межгород', subtitle: 'В другой город', icon: Icons.route_rounded, color: const Color(0xFFFFF8D9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercityPage()))),
-              _ServiceCard(title: 'Грузовой', subtitle: 'Перевозка вещей', icon: Icons.local_shipping_rounded, color: const Color(0xFFFFF0A8), onTap: () => _open(context, JibekServiceType.freight)),
+              _ServiceCard(title: 'Межгород', subtitle: 'В другой город', icon: Icons.route_rounded, color: const Color(0xFFF2F4F7), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercityPage()))),
+              _ServiceCard(title: 'Грузовой', subtitle: 'Перевозка вещей', icon: Icons.local_shipping_rounded, color: const Color(0xFFEAF0F6), onTap: () => _open(context, JibekServiceType.freight)),
             ],
           ),
           const SizedBox(height: 20),
@@ -85,6 +85,79 @@ class PassengerHomePage extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+
+class _PassengerDrawer extends StatelessWidget {
+  const _PassengerDrawer();
+
+  @override
+  Widget build(BuildContext context) => Drawer(
+    backgroundColor: _surface,
+    child: SafeArea(child: ListView(padding: EdgeInsets.zero, children: [
+      Container(
+        padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+        decoration: const BoxDecoration(color: _ink),
+        child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          CircleAvatar(radius: 27, backgroundColor: _gold, child: Icon(Icons.local_taxi_rounded, color: _ink, size: 30)),
+          SizedBox(height: 12),
+          Text('Bake Taxi', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+          Text('Пассажирское приложение', style: TextStyle(color: Color(0xFFD9E0E8), fontSize: 12)),
+        ]),
+      ),
+      _drawerItem(context, Icons.home_rounded, 'Главная', () => Navigator.pop(context)),
+      _drawerItem(context, Icons.receipt_long_rounded, 'Мои поездки', () => _showInfo(context, 'История поездок')),
+      _drawerItem(context, Icons.favorite_border_rounded, 'Избранные адреса', () => _showInfo(context, 'Избранные адреса')),
+      _drawerItem(context, Icons.credit_card_rounded, 'Способы оплаты', () => _showInfo(context, 'Способы оплаты')),
+      _drawerItem(context, Icons.notifications_none_rounded, 'Уведомления', () => _showInfo(context, 'Уведомления')),
+      _drawerItem(context, Icons.help_outline_rounded, 'Поддержка', () => _showInfo(context, 'Поддержка')),
+      _drawerItem(context, Icons.info_outline_rounded, 'О приложении', () => _showInfo(context, 'Bake Taxi')),
+    ])),
+  );
+
+  Widget _drawerItem(BuildContext context, IconData icon, String title, VoidCallback onTap) =>
+    ListTile(leading: Icon(icon, color: _ink), title: Text(title, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)), onTap: onTap);
+
+  void _showInfo(BuildContext context, String title) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$title — раздел будет подключён отдельно')));
+  }
+}
+
+class PassengerProfilePage extends StatelessWidget {
+  const PassengerProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: _page,
+    appBar: AppBar(title: const Text('Профиль'), backgroundColor: _surface, foregroundColor: _ink, elevation: 0),
+    body: ListView(padding: const EdgeInsets.all(18), children: [
+      Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: _ink, borderRadius: BorderRadius.circular(24)),
+        child: const Column(children: [
+          CircleAvatar(radius: 38, backgroundColor: _gold, child: Icon(Icons.person_rounded, color: _ink, size: 42)),
+          SizedBox(height: 12),
+          Text('Пассажир Bake Taxi', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+          SizedBox(height: 4),
+          Text('Ваш профиль', style: TextStyle(color: Color(0xFFD9E0E8))),
+        ]),
+      ),
+      const SizedBox(height: 14),
+      _profileItem(Icons.receipt_long_rounded, 'Мои поездки'),
+      _profileItem(Icons.favorite_border_rounded, 'Избранные адреса'),
+      _profileItem(Icons.credit_card_rounded, 'Способы оплаты'),
+      _profileItem(Icons.notifications_none_rounded, 'Уведомления'),
+      _profileItem(Icons.help_outline_rounded, 'Поддержка'),
+      _profileItem(Icons.info_outline_rounded, 'О приложении'),
+    ]),
+  );
+
+  Widget _profileItem(IconData icon, String title) => Card(
+    color: _surface, elevation: 0, margin: const EdgeInsets.only(bottom: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: ListTile(leading: Icon(icon, color: _ink), title: Text(title, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)), trailing: const Icon(Icons.chevron_right_rounded, color: _muted), onTap: () {}),
   );
 }
 
