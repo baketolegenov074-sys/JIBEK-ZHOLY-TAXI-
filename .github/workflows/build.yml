@@ -98,7 +98,7 @@ jobs:
               for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
                   (adaptive / name).unlink(missing_ok=True)
           print(f"Installed original PNG launcher artwork from {source}")
-                    PY
+          PY
 
               # Keep the Android Kotlin compiler compatible with current Flutter plugins.
               python3 - <<'PY'
