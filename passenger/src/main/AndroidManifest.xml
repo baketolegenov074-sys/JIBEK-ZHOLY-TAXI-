@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application android:theme="@android:style/Theme.Material.Light.NoActionBar"
-        android:label="Жібек Жолы — Жолаушы"
+        android:label="Bake Taxi"
         android:icon="@drawable/ic_launcher_passenger"
         android:roundIcon="@drawable/ic_launcher_passenger">
         <activity android:name=".MainActivity" android:exported="true">
