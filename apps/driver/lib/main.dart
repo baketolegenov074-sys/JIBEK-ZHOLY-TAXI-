@@ -355,6 +355,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
       'Такси': JibekServiceType.cityTaxi,
       'Межгород': JibekServiceType.intercity,
       'Посылки': JibekServiceType.parcel,
+      'Грузовой': JibekServiceType.freight,
       'Эвакуатор': JibekServiceType.towTruck,
       'Шиномонтаж': JibekServiceType.mobileTire,
     };
@@ -505,6 +506,8 @@ class _DriverMapPageState extends State<DriverMapPage> {
         return 'Межгород';
       case JibekServiceType.parcel:
         return 'Доставка посылки';
+      case JibekServiceType.freight:
+        return 'Грузовой';
       case JibekServiceType.towTruck:
         return 'Эвакуатор';
       case JibekServiceType.mobileTire:
