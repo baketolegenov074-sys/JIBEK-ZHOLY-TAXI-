@@ -51,6 +51,7 @@ class JibekOrderRequest {
     required this.createdAt,
     this.vehicleClass,
     this.note,
+    this.stops = const [],
     this.passengerId,
     this.status = JibekOrderStatus.draft,
   });
@@ -62,6 +63,7 @@ class JibekOrderRequest {
   final DateTime createdAt;
   final String? vehicleClass;
   final String? note;
+  final List<JibekGeoPoint> stops;
   final String? passengerId;
   final JibekOrderStatus status;
 
@@ -73,6 +75,14 @@ class JibekOrderRequest {
     if (pickup.latitude == destination.latitude &&
         pickup.longitude == destination.longitude) {
       return 'Точки отправления и назначения совпадают';
+    }
+    if (stops.length > 1) return 'Можно добавить только одну остановку';
+    for (final stop in stops) {
+      if (!stop.isValid) return 'Координаты остановки указаны неверно';
+      if ((stop.latitude == pickup.latitude && stop.longitude == pickup.longitude) ||
+          (stop.latitude == destination.latitude && stop.longitude == destination.longitude)) {
+        return 'Остановка должна отличаться от начала и конца маршрута';
+      }
     }
     if (service == JibekServiceType.cityTaxi &&
         (vehicleClass == null || vehicleClass!.trim().isEmpty)) {
@@ -102,6 +112,7 @@ class JibekOrderRequest {
         'createdAt': createdAt.toUtc().toIso8601String(),
         if (vehicleClass != null) 'vehicleClass': vehicleClass,
         if (note != null) 'note': note,
+        if (stops.isNotEmpty) 'stops': stops.map((point) => point.toJson()).toList(),
         if (passengerId != null) 'passengerId': passengerId,
         'status': status.name,
       };
@@ -119,6 +130,9 @@ class JibekOrderRequest {
         createdAt: DateTime.parse(json['createdAt'] as String),
         vehicleClass: json['vehicleClass'] as String?,
         note: json['note'] as String?,
+        stops: (json['stops'] as List<dynamic>? ?? const [])
+            .map((item) => JibekGeoPoint.fromJson(Map<String, Object?>.from(item as Map)))
+            .toList(growable: false),
         passengerId: json['passengerId'] as String?,
         status: JibekOrderStatus.values.byName(
           json['status'] as String? ?? JibekOrderStatus.draft.name,
