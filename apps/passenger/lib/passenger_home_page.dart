@@ -112,7 +112,10 @@ class _PassengerDrawer extends StatelessWidget {
         ]),
       ),
       _drawerItem(context, Icons.home_rounded, 'Главная', () => Navigator.pop(context)),
-      _drawerItem(context, Icons.receipt_long_rounded, 'Мои поездки', () => _showInfo(context, 'История поездок')),
+      _drawerItem(context, Icons.receipt_long_rounded, 'Мои поездки', () {
+        Navigator.pop(context);
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PassengerProfilePage()));
+      }),
       _drawerItem(context, Icons.favorite_border_rounded, 'Избранные адреса', () => _showInfo(context, 'Избранные адреса')),
       _drawerItem(context, Icons.credit_card_rounded, 'Способы оплаты', () => _showInfo(context, 'Способы оплаты')),
       _drawerItem(context, Icons.notifications_none_rounded, 'Уведомления', () => _showInfo(context, 'Уведомления')),
