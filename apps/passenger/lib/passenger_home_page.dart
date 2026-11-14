@@ -238,9 +238,18 @@ class _PassengerProfilePageState extends State<PassengerProfilePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getStringList(_historyKey) ?? const <String>[];
-      final orders = raw.map((item) => JibekOrderRequest.fromJson(
-        Map<String, Object?>.from(jsonDecode(item) as Map),
-      )).toList();
+      final orders = <JibekOrderRequest>[];
+      for (final item in raw) {
+        try {
+          final decoded = jsonDecode(item);
+          if (decoded is! Map) continue;
+          orders.add(JibekOrderRequest.fromJson(
+            Map<String, Object?>.from(decoded),
+          ));
+        } catch (_) {
+          // Ignore a damaged legacy entry without hiding the rest of history.
+        }
+      }
       if (mounted) setState(() { _orders = orders; _loading = false; });
     } catch (_) {
       if (mounted) setState(() { _orders = []; _loading = false; });
