@@ -422,7 +422,8 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     children: [
                       (JibekServiceType.cityTaxi, 'Городское такси'),
                       (JibekServiceType.intercity, 'Межгород'),
-                      (JibekServiceType.parcel, 'Посылка'),
+                      (JibekServiceType.parcel, 'Доставка / Посылка'),
+                      (JibekServiceType.freight, 'Грузовой'),
                       (JibekServiceType.towTruck, 'Эвакуатор'),
                       (JibekServiceType.mobileTire, 'Шиномонтаж'),
                     ].map((item) => ChoiceChip(
@@ -456,7 +457,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     decoration: InputDecoration(
                       labelText: _service == JibekServiceType.parcel
                           ? 'Что нужно доставить?'
-                          : _service == JibekServiceType.towTruck
+                           : _service == JibekServiceType.freight
+                              ? 'Опишите груз, габариты и адрес доставки'
+                              : _service == JibekServiceType.towTruck
                               ? 'Опишите автомобиль и поломку'
                               : _service == JibekServiceType.mobileTire
                                   ? 'Укажите размер колёс и проблему'
@@ -483,7 +486,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       icon: _searching
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
-                      label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.freight ? 'Заказать грузовую машину' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                       style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10243A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
@@ -500,12 +503,15 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
 
   Future<void> _submitOrder() async {
     final requiresDetails = _service == JibekServiceType.parcel ||
+        _service == JibekServiceType.freight ||
         _service == JibekServiceType.towTruck ||
         _service == JibekServiceType.mobileTire;
     if (requiresDetails && _noteController.text.trim().isEmpty) {
       _message(_service == JibekServiceType.parcel
           ? 'Опишите посылку и что нужно доставить'
-          : _service == JibekServiceType.towTruck
+           : _service == JibekServiceType.freight
+              ? 'Опишите груз, габариты и адрес доставки'
+              : _service == JibekServiceType.towTruck
               ? 'Укажите автомобиль и характер поломки'
               : 'Укажите размер колёс и проблему');
       return;
