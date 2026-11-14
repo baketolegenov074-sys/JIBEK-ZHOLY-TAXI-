@@ -543,7 +543,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                         if (_toPoint == null) {
                           _searchDestination();
                         } else if (_fromPoint == null) {
-                          _findMe();
+                          if (_fromController.text.trim().isNotEmpty &&
+                              _fromController.text.trim() != 'Моё местоположение') {
+                            _searchFrom();
+                          } else {
+                            _findMe();
+                          }
                         } else if (_route.isEmpty) {
                           _buildRoute();
                         } else {
