@@ -626,6 +626,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     }
     setState(() => _sendingOrder = true);
     final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
+    final orderNote = [
+      _noteController.text.trim(),
+      if (_childSeat) 'Детское кресло',
+      if (_needMovers) 'Нужны грузчики',
+      'Оплата: $_paymentMethod',
+    ].where((item) => item.isNotEmpty).join('; ');
     try {
       final draft = JibekOrderRequest(
         id: 'local-draft', service: _service,
@@ -633,7 +639,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         destination: JibekGeoPoint(latitude: _toPoint!.latitude, longitude: _toPoint!.longitude, address: _toController.text),
         createdAt: DateTime.now(),
         vehicleClass: _service == JibekServiceType.cityTaxi ? _class : null,
-        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        note: orderNote.isEmpty ? null : orderNote,
       );
       final validation = draft.validate();
       if (validation != null) { _message(validation); return; }
