@@ -364,9 +364,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   const SizedBox(height: 16),
                   const Text('Куда поедем?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
                   const SizedBox(height: 14),
-                  _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom()),
+                  _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom(), onChanged: (_) { setState(() { _fromPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
                   const SizedBox(height: 9),
-                  _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination()),
+                  _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination(), onChanged: (_) { setState(() { _toPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
                   Align(alignment: Alignment.centerRight, child: TextButton.icon(
                     onPressed: () => setState(() => _addStop = !_addStop),
                     icon: Icon(_addStop ? Icons.remove_circle_outline : Icons.add_circle_outline),
@@ -833,11 +833,13 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     String hint,
     TextEditingController controller, {
     required ValueChanged<String> onSubmitted,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       onSubmitted: onSubmitted,
+      onChanged: onChanged,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: const Color(0xFF10243A)),
         hintText: hint,
