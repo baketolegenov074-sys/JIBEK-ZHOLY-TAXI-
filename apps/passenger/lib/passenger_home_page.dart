@@ -116,7 +116,10 @@ class _PassengerDrawer extends StatelessWidget {
         Navigator.pop(context);
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PassengerProfilePage()));
       }),
-      _drawerItem(context, Icons.favorite_border_rounded, 'Избранные адреса', () => _showInfo(context, 'Избранные адреса')),
+      _drawerItem(context, Icons.favorite_border_rounded, 'Избранные адреса', () {
+        Navigator.pop(context);
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PassengerFavoritesPage()));
+      }),
       _drawerItem(context, Icons.credit_card_rounded, 'Способы оплаты', () => _showInfo(context, 'Способы оплаты')),
       _drawerItem(context, Icons.notifications_none_rounded, 'Уведомления', () => _showInfo(context, 'Уведомления')),
       _drawerItem(context, Icons.help_outline_rounded, 'Поддержка', () => _showInfo(context, 'Поддержка')),
@@ -192,7 +195,7 @@ class _PassengerProfilePageState extends State<PassengerProfilePage> {
         ),
       )),
       _profileItem(Icons.receipt_long_rounded, 'История заказов'),
-      _profileItem(Icons.favorite_border_rounded, 'Избранные адреса'),
+      _profileItem(Icons.favorite_border_rounded, 'Избранные адреса', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PassengerFavoritesPage()))),
       _profileItem(Icons.credit_card_rounded, 'Способы оплаты'),
       _profileItem(Icons.notifications_none_rounded, 'Уведомления'),
       _profileItem(Icons.help_outline_rounded, 'Поддержка'),
@@ -213,10 +216,136 @@ class _PassengerProfilePageState extends State<PassengerProfilePage> {
     JibekOrderStatus.cancelled => 'Отменена',
   };
 
-  Widget _profileItem(IconData icon, String title) => Card(
+  Widget _profileItem(IconData icon, String title, {VoidCallback? onTap}) => Card(
     color: _surface, elevation: 0, margin: const EdgeInsets.only(bottom: 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: ListTile(leading: Icon(icon, color: _ink), title: Text(title, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)), trailing: const Icon(Icons.chevron_right_rounded, color: _muted), onTap: () {}),
+    child: ListTile(leading: Icon(icon, color: _ink), title: Text(title, style: const TextStyle(color: _ink, fontWeight: FontWeight.w700)), trailing: const Icon(Icons.chevron_right_rounded, color: _muted), onTap: onTap),
+  );
+}
+
+
+class PassengerFavoritesPage extends StatefulWidget {
+  const PassengerFavoritesPage({super.key});
+
+  @override
+  State<PassengerFavoritesPage> createState() => _PassengerFavoritesPageState();
+}
+
+class _PassengerFavoritesPageState extends State<PassengerFavoritesPage> {
+  static const _favoritesKey = 'bake_taxi_favorite_addresses';
+  List<String> _addresses = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _addresses = prefs.getStringList(_favoritesKey) ?? [];
+      _loading = false;
+    });
+  }
+
+  Future<void> _addAddress() async {
+    final controller = TextEditingController();
+    final address = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Новый адрес'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Название или адрес'),
+          textCapitalization: TextCapitalization.sentences,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Отмена')),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (address == null || address.isEmpty || !mounted) return;
+    if (_addresses.any((item) => item.toLowerCase() == address.toLowerCase())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Этот адрес уже сохранён')));
+      return;
+    }
+    final updated = [..._addresses, address];
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_favoritesKey, updated);
+    if (mounted) setState(() => _addresses = updated);
+  }
+
+  Future<void> _removeAddress(String address) async {
+    final updated = _addresses.where((item) => item != address).toList();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_favoritesKey, updated);
+    if (mounted) setState(() => _addresses = updated);
+  }
+
+  void _selectAddress(String address) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PassengerMapPage(
+        initialService: JibekServiceType.cityTaxi,
+        initialDestination: address,
+      ),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: _page,
+    appBar: AppBar(
+      title: const Text('Избранные адреса'),
+      backgroundColor: _surface,
+      foregroundColor: _ink,
+      elevation: 0,
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: _addAddress,
+      backgroundColor: _gold,
+      foregroundColor: _ink,
+      icon: const Icon(Icons.add),
+      label: const Text('Добавить адрес'),
+    ),
+    body: _loading
+      ? const Center(child: CircularProgressIndicator())
+      : _addresses.isEmpty
+        ? const Center(child: Padding(
+            padding: EdgeInsets.all(28),
+            child: Text('Здесь будут ваши любимые адреса. Нажмите «Добавить адрес», чтобы сохранить первый.', textAlign: TextAlign.center, style: TextStyle(color: _muted)),
+          ))
+        : ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+            itemCount: _addresses.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final address = _addresses[index];
+              return Card(
+                color: _surface,
+                elevation: 0,
+                child: ListTile(
+                  leading: const Icon(Icons.favorite_rounded, color: _ink),
+                  title: Text(address, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  subtitle: const Text('Нажмите, чтобы выбрать адрес назначения'),
+                  onTap: () => _selectAddress(address),
+                  trailing: IconButton(
+                    tooltip: 'Удалить адрес',
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: () => _removeAddress(address),
+                  ),
+                ),
+              );
+            },
+          ),
   );
 }
 
