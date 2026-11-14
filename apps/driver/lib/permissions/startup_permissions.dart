@@ -1,8 +1,6 @@
 import 'package:permission_handler/permission_handler.dart';
 
-/// Requests the permissions used by Bake Taxi features one at a time.
-/// Android special access (background location and overlay) may require
-/// the user to complete a separate system Settings screen.
+/// Driver permissions for dispatch, navigation and driver communication.
 Future<void> requestBakeTaxiPermissions() async {
   final runtimePermissions = <Permission>[
     Permission.notification,
@@ -10,7 +8,6 @@ Future<void> requestBakeTaxiPermissions() async {
     Permission.camera,
     Permission.photos,
     Permission.audio,
-    Permission.storage,
     Permission.microphone,
     Permission.phone,
     Permission.contacts,
@@ -25,7 +22,7 @@ Future<void> requestBakeTaxiPermissions() async {
         await permission.request();
       }
     } catch (_) {
-      // A denied optional permission must not prevent the app from opening.
+      // A denied permission must not prevent the driver app from opening.
     }
   }
 
@@ -35,6 +32,6 @@ Future<void> requestBakeTaxiPermissions() async {
       await Permission.systemAlertWindow.request();
     }
   } catch (_) {
-    // Overlay access is special app access and can be enabled later in Settings.
+    // Android opens a dedicated system settings screen for overlay access.
   }
 }
