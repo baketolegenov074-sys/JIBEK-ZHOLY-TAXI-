@@ -63,7 +63,7 @@ jobs:
             echo "===== Preparing ${output_name} ====="
             (
               cd "$app_dir"
-              flutter create --platforms=android --org kz.jibekzholy --project-name "$project_name" .
+              flutter create --platforms=android --org kz.baketaxi --project-name "$project_name" .
 
               # Install the selected branded launcher icon for this app.
               python3 - "$icon_source" <<'PY'
@@ -162,14 +162,14 @@ jobs:
           common_permissions = [
               "INTERNET",
           ]
-          if application_id == "kz.jibekzholy.client":
+          if application_id == "kz.baketaxi.client":
               permission_names = common_permissions + [
                   "ACCESS_NETWORK_STATE",
                   "ACCESS_FINE_LOCATION",
                   "ACCESS_COARSE_LOCATION",
                   "POST_NOTIFICATIONS",
               ]
-          elif application_id == "kz.jibekzholy.driverapp":
+          elif application_id == "kz.baketaxi.driverapp":
               permission_names = common_permissions + [
                   "POST_NOTIFICATIONS",
                   "ACCESS_FINE_LOCATION",
@@ -185,7 +185,7 @@ jobs:
                   "FOREGROUND_SERVICE",
                   "SYSTEM_ALERT_WINDOW",
               ]
-          elif application_id == "kz.jibekzholy.owneradmin":
+          elif application_id == "kz.baketaxi.owneradmin":
               permission_names = common_permissions + [
                   "POST_NOTIFICATIONS",
                   "READ_MEDIA_IMAGES",
@@ -218,7 +218,7 @@ jobs:
               raise SystemExit("Android manifest has no application element")
           manifest = manifest.replace(marker, "\n".join(permissions) + "\n    " + marker, 1)
           # Passenger app explicitly removes permissions contributed by transitive plugins.
-          if application_id == "kz.jibekzholy.client":
+          if application_id == "kz.baketaxi.client":
               import xml.etree.ElementTree as ET
               android_ns = "http://schemas.android.com/apk/res/android"
               tools_ns = "http://schemas.android.com/tools"
@@ -245,7 +245,7 @@ jobs:
               flutter pub get
               flutter build apk --release
 
-              if [[ "$application_id" == "kz.jibekzholy.client" ]]; then
+              if [[ "$application_id" == "kz.baketaxi.client" ]]; then
                 python3 - <<'PY'
           import pathlib
           import xml.etree.ElementTree as ET
@@ -277,9 +277,9 @@ jobs:
             echo "Created dist/$output_name"
           }
 
-          build_one apps/passenger client_taxi kz.jibekzholy.client "Bake Taxi" ClientTaxi.apk ../../apps/brand_icon.png
-          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "Bake Taxi Водитель" DriverTaxi.apk ../../apps/passenger_icon.png
-          build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "Bake Taxi Админ" OwnerAdmin.apk ../../apps/admin_icon.png
+          build_one apps/passenger client_taxi kz.baketaxi.client "Bake Taxi" ClientTaxi.apk ../../apps/brand_icon.png
+          build_one apps/driver driver_taxi kz.baketaxi.driverapp "Bake Taxi Водитель" DriverTaxi.apk ../../apps/passenger_icon.png
+          build_one apps/owner_admin owner_admin kz.baketaxi.owneradmin "Bake Taxi Админ" OwnerAdmin.apk ../../apps/admin_icon.png
 
           echo "===== APK files ====="
           ls -lh dist/*.apk
