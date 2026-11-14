@@ -17,7 +17,7 @@ class JibekPassengerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'ЖІБЕК ЖОЛЫ',
+        title: 'Bake Taxi',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
         home: const PassengerMapPage(),
@@ -299,7 +299,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                        Text('Bake Taxi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
                         Text('ТАКСИ • ДОСТАВКА • ПОМОЩЬ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .7)),
                       ],
                     ),
