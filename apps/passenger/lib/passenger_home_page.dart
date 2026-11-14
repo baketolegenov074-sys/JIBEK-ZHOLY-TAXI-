@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:jibek_shared/jibek_shared.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart';
 
 const _ink = Color(0xFF10243A);
@@ -125,8 +128,32 @@ class _PassengerDrawer extends StatelessWidget {
   }
 }
 
-class PassengerProfilePage extends StatelessWidget {
+class PassengerProfilePage extends StatefulWidget {
   const PassengerProfilePage({super.key});
+  @override
+  State<PassengerProfilePage> createState() => _PassengerProfilePageState();
+}
+
+class _PassengerProfilePageState extends State<PassengerProfilePage> {
+  static const _historyKey = 'bake_taxi_order_history';
+  List<JibekOrderRequest> _orders = [];
+  bool _loading = true;
+
+  @override
+  void initState() { super.initState(); _loadHistory(); }
+
+  Future<void> _loadHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList(_historyKey) ?? const <String>[];
+      final orders = raw.map((item) => JibekOrderRequest.fromJson(
+        Map<String, Object?>.from(jsonDecode(item) as Map),
+      )).toList();
+      if (mounted) setState(() { _orders = orders; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _orders = []; _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -145,7 +172,21 @@ class PassengerProfilePage extends StatelessWidget {
         ]),
       ),
       const SizedBox(height: 14),
-      _profileItem(Icons.receipt_long_rounded, 'Мои поездки'),
+      const SizedBox(height: 18),
+      const Text('Последние поездки', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _ink)),
+      const SizedBox(height: 8),
+      if (_loading) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator()))
+      else if (_orders.isEmpty) const Card(color: _surface, child: Padding(padding: EdgeInsets.all(16), child: Text('Пока поездок нет. Здесь появятся ваши оформленные заказы.', style: TextStyle(color: _muted))))
+      else ..._orders.take(10).map((order) => Card(
+        color: _surface, elevation: 0, margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: const Icon(Icons.local_taxi_rounded, color: _ink),
+          title: Text(order.destination.address ?? 'Заказ ${order.id}', maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text('${_serviceTitle(order.service)} • ${_statusTitle(order.status)}'),
+          trailing: Text('${order.createdAt.toLocal().day.toString().padLeft(2, '0')}.${order.createdAt.toLocal().month.toString().padLeft(2, '0')}.${order.createdAt.toLocal().year}', style: const TextStyle(fontSize: 11, color: _muted)),
+        ),
+      )),
+      _profileItem(Icons.receipt_long_rounded, 'История заказов'),
       _profileItem(Icons.favorite_border_rounded, 'Избранные адреса'),
       _profileItem(Icons.credit_card_rounded, 'Способы оплаты'),
       _profileItem(Icons.notifications_none_rounded, 'Уведомления'),
@@ -153,6 +194,19 @@ class PassengerProfilePage extends StatelessWidget {
       _profileItem(Icons.info_outline_rounded, 'О приложении'),
     ]),
   );
+
+  String _serviceTitle(JibekServiceType service) => switch (service) {
+    JibekServiceType.cityTaxi => 'Такси', JibekServiceType.intercity => 'Межгород',
+    JibekServiceType.parcel => 'Доставка', JibekServiceType.freight => 'Грузовой',
+    JibekServiceType.towTruck => 'Эвакуатор', JibekServiceType.mobileTire => 'Шиномонтаж',
+  };
+
+  String _statusTitle(JibekOrderStatus status) => switch (status) {
+    JibekOrderStatus.draft => 'Черновик', JibekOrderStatus.searching => 'Ищем водителя',
+    JibekOrderStatus.accepted => 'Водитель найден', JibekOrderStatus.driverArriving => 'Водитель едет',
+    JibekOrderStatus.inProgress => 'В поездке', JibekOrderStatus.completed => 'Завершена',
+    JibekOrderStatus.cancelled => 'Отменена',
+  };
 
   Widget _profileItem(IconData icon, String title) => Card(
     color: _surface, elevation: 0, margin: const EdgeInsets.only(bottom: 8),
