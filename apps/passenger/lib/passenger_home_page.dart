@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart';
@@ -11,8 +13,74 @@ const _surface = Colors.white;
 const _page = Color(0xFFF7F7F5);
 const _muted = Color(0xFF687386);
 
-class PassengerHomePage extends StatelessWidget {
+class PassengerHomePage extends StatefulWidget {
   const PassengerHomePage({super.key});
+
+  @override
+  State<PassengerHomePage> createState() => _PassengerHomePageState();
+}
+
+class _PassengerHomePageState extends State<PassengerHomePage> {
+  String _currentAddress = 'Шымкент • Нажмите, чтобы определить адрес';
+  bool _loadingAddress = false;
+
+  Future<void> _loadCurrentAddress() async {
+    if (_loadingAddress) return;
+    setState(() => _loadingAddress = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _showLocationMessage('Включите геолокацию на телефоне');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _showLocationMessage('Разрешите доступ к геолокации, чтобы показать адрес');
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition();
+      final uri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
+        'lat': position.latitude.toString(),
+        'lon': position.longitude.toString(),
+        'format': 'jsonv2',
+        'accept-language': 'ru',
+      });
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'BakeTaxiPassenger/1.0',
+        'Accept': 'application/json',
+      });
+      if (response.statusCode != 200) {
+        throw Exception('Сервис адресов временно недоступен');
+      }
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final address = data['address'] as Map<String, dynamic>? ?? {};
+      final parts = [
+        address['road'],
+        address['house_number'],
+        address['suburb'] ?? address['neighbourhood'],
+        address['city'] ?? address['town'] ?? address['village'],
+      ].where((part) => part != null && part.toString().trim().isNotEmpty)
+       .map((part) => part.toString()).toList();
+      if (!mounted) return;
+      setState(() => _currentAddress = parts.isEmpty
+          ? (data['display_name']?.toString() ?? 'Местоположение определено')
+          : parts.join(', '));
+    } catch (_) {
+      _showLocationMessage('Не удалось определить адрес. Попробуйте ещё раз');
+    } finally {
+      if (mounted) setState(() => _loadingAddress = false);
+    }
+  }
+
+  void _showLocationMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
 
   void _open(BuildContext context, JibekServiceType service) {
     Navigator.of(context).push(MaterialPageRoute(
@@ -38,11 +106,27 @@ class PassengerHomePage extends StatelessWidget {
             const Spacer(),
             IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PassengerProfilePage())), icon: const Icon(Icons.account_circle_outlined, size: 28)),
           ]),
-          const Row(children: [
-            Icon(Icons.location_on_rounded, color: Color(0xFFB58A16), size: 18),
-            SizedBox(width: 5),
-            Expanded(child: Text('Шымкент • Определяем адрес по GPS', style: TextStyle(color: _muted, fontSize: 12))),
-          ]),
+          InkWell(
+            onTap: _loadingAddress ? null : _loadCurrentAddress,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(children: [
+                const Icon(Icons.location_on_rounded, color: Color(0xFFB58A16), size: 18),
+                const SizedBox(width: 5),
+                Expanded(child: Text(
+                  _loadingAddress ? 'Определяем ваше местоположение…' : _currentAddress,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: _muted, fontSize: 12),
+                )),
+                if (_loadingAddress)
+                  const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                else
+                  const Icon(Icons.refresh_rounded, size: 16, color: _muted),
+              ]),
+            ),
+          ),
           const SizedBox(height: 20),
           const Text('Куда отправимся?', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900, color: _ink)),
           const SizedBox(height: 14),
