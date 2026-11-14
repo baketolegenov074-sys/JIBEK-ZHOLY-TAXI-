@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:jibek_shared/jibek_shared.dart';
 import 'main.dart';
 
-const _ink = Color(0xFF17212B);
-const _gold = Color(0xFFFFD400);
+const _ink = Color(0xFF10243A);
+const _gold = Color(0xFFE3BD70);
 const _surface = Colors.white;
 const _page = Color(0xFFF7F7F5);
 const _muted = Color(0xFF687386);
@@ -29,7 +29,7 @@ class PassengerHomePage extends StatelessWidget {
               const SnackBar(content: Text('Меню Bake Taxi'))),
               icon: const Icon(Icons.menu_rounded, size: 28)),
             const Spacer(),
-            const Text('BAKE TAXI', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: _ink)),
+            const Text('Bake Taxi', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: .3, color: _ink)),
             const Spacer(),
             IconButton(onPressed: () {}, icon: const Icon(Icons.account_circle_outlined, size: 28)),
           ]),
@@ -45,8 +45,8 @@ class PassengerHomePage extends StatelessWidget {
             crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.45,
             children: [
-              _ServiceCard(title: 'Такси', subtitle: 'от 4 мин', icon: Icons.local_taxi_rounded, color: const Color(0xFFFFF0A8), onTap: () => _open(context, JibekServiceType.cityTaxi)),
-              _ServiceCard(title: 'Доставка', subtitle: 'Посылка', icon: Icons.inventory_2_rounded, color: const Color(0xFFFFF8D9), onTap: () => _open(context, JibekServiceType.parcel)),
+              _ServiceCard(title: 'Такси', subtitle: 'от 4 мин', icon: Icons.local_taxi_rounded, color: const Color(0xFFEAF0F6), onTap: () => _open(context, JibekServiceType.cityTaxi)),
+              _ServiceCard(title: 'Доставка', subtitle: 'Посылка', icon: Icons.inventory_2_rounded, color: const Color(0xFFF2F4F7), onTap: () => _open(context, JibekServiceType.parcel)),
               _ServiceCard(title: 'Межгород', subtitle: 'В другой город', icon: Icons.route_rounded, color: const Color(0xFFFFF8D9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntercityPage()))),
               _ServiceCard(title: 'Грузовой', subtitle: 'Перевозка вещей', icon: Icons.local_shipping_rounded, color: const Color(0xFFFFF0A8), onTap: () => _open(context, JibekServiceType.freight)),
             ],
@@ -102,7 +102,7 @@ class _ServiceCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(width: 46, height: 46, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFFFE17A))), child: Icon(icon, color: _ink, size: 27)),
+          Container(width: 46, height: 46, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFDCE3EB))), child: Icon(icon, color: _ink, size: 27)),
           const Spacer(),
           Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: _ink)),
           Text(subtitle, style: const TextStyle(fontSize: 12, color: _muted)),
