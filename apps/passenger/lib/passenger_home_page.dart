@@ -29,8 +29,10 @@ class PassengerHomePage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
         children: [
           Row(children: [
-            IconButton(onPressed: () => Scaffold.of(context).openDrawer(),
-              icon: const Icon(Icons.menu_rounded, size: 28)),
+            Builder(builder: (drawerContext) => IconButton(
+              onPressed: () => Scaffold.of(drawerContext).openDrawer(),
+              icon: const Icon(Icons.menu_rounded, size: 28),
+            )),
             const Spacer(),
             const Text('Bake Taxi', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: .3, color: _ink)),
             const Spacer(),
