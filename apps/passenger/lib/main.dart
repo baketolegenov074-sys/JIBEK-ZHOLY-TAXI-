@@ -46,6 +46,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       TextEditingController(text: 'Моё местоположение');
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _stopController = TextEditingController();
+  bool _addStop = false;
+  String _paymentMethod = 'Наличные';
   final LatLng _shymkent = const LatLng(42.3154, 69.5869);
 
   LatLng? _fromPoint;
@@ -76,6 +79,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     _fromController.dispose();
     _toController.dispose();
     _noteController.dispose();
+    _stopController.dispose();
     super.dispose();
   }
 
@@ -348,6 +352,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   _placeField(Icons.radio_button_checked, 'Откуда', _fromController, onSubmitted: (_) => _searchFrom()),
                   const SizedBox(height: 9),
                   _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination()),
+                  Align(alignment: Alignment.centerRight, child: TextButton.icon(
+                    onPressed: () => setState(() => _addStop = !_addStop),
+                    icon: Icon(_addStop ? Icons.remove_circle_outline : Icons.add_circle_outline),
+                    label: Text(_addStop ? 'Убрать остановку' : 'Добавить остановку'),
+                  )),
+                  if (_addStop) _placeField(Icons.more_horiz, 'Промежуточная остановка', _stopController, onSubmitted: (_) {}),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
@@ -414,6 +424,15 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       ]),
                     ),
                   const SizedBox(height: 8),
+                  const Text('Категории услуг', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+                    _serviceTab('Такси', JibekServiceType.cityTaxi),
+                    _serviceTab('Доставка и Грузовой', JibekServiceType.freight),
+                    _serviceTab('Спецтехника', JibekServiceType.towTruck),
+                    _serviceTab('Межгород', JibekServiceType.intercity),
+                  ])),
+                  const SizedBox(height: 12),
                   const Text('Что вам нужно?', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
                   const SizedBox(height: 8),
                   Wrap(
@@ -449,6 +468,27 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     )).toList(),
                   ),
                   ],
+                  if (_service == JibekServiceType.cityTaxi) ...[
+                    const SizedBox(height: 12),
+                    const Text('Выберите тариф', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    SizedBox(height: 122, child: ListView(scrollDirection: Axis.horizontal, children: [
+                      _tariffCard('Вместе', Icons.people_alt_rounded, 'от 4 мин', 'Цена после маршрута'),
+                      _tariffCard('Эконом', Icons.directions_car_rounded, 'от 2 мин', 'Цена после маршрута'),
+                      _tariffCard('Комфорт', Icons.airline_seat_recline_extra, 'от 5 мин', 'Цена после маршрута'),
+                      _tariffCard('Бизнес', Icons.directions_car_filled, 'от 7 мин', 'Цена после маршрута'),
+                    ])),
+                  ],
+                  if (_service == JibekServiceType.freight || _service == JibekServiceType.parcel || _service == JibekServiceType.towTruck || _service == JibekServiceType.mobileTire) ...[
+                    const SizedBox(height: 10),
+                    const Text('Выбранная услуга', style: TextStyle(fontWeight: FontWeight.w900)),
+                    Wrap(spacing: 8, children: [
+                      if (_service == JibekServiceType.parcel) const Chip(label: Text('Посылка')),
+                      if (_service == JibekServiceType.freight) const Chip(label: Text('Грузовой')),
+                      if (_service == JibekServiceType.towTruck) const Chip(label: Text('Эвакуатор')),
+                      if (_service == JibekServiceType.mobileTire) const Chip(label: Text('Шиномонтаж')),
+                    ]),
+                  ],
                   const SizedBox(height: 12),
                   TextField(
                     controller: _noteController,
@@ -469,6 +509,18 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  Row(children: [
+                    Expanded(child: OutlinedButton.icon(
+                      onPressed: () => setState(() => _paymentMethod = _paymentMethod == 'Наличные' ? 'Kaspi' : 'Наличные'),
+                      icon: const Icon(Icons.payments_outlined), label: Text(_paymentMethod),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: OutlinedButton.icon(
+                      onPressed: _showPreferences,
+                      icon: const Icon(Icons.tune_rounded), label: const Text('Пожелания'),
+                    )),
+                  ]),
+                  const SizedBox(height: 8),
                   SizedBox(
                     height: 54,
                     child: FilledButton.icon(
@@ -487,7 +539,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
                       label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.freight ? 'Заказать грузовую машину' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10243A), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFD400), foregroundColor: const Color(0xFF17212B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -498,6 +550,54 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _serviceTab(String label, JibekServiceType service) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: ChoiceChip(
+      label: Text(label), selected: _service == service,
+      selectedColor: const Color(0xFFFFE36B),
+      onSelected: (_) => setState(() => _service = service),
+    ),
+  );
+
+  Widget _tariffCard(String label, IconData icon, String eta, String price) {
+    final selected = _class == label;
+    return GestureDetector(
+      onTap: () => setState(() => _class = label),
+      child: Container(
+        width: 142, margin: const EdgeInsets.only(right: 9), padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFFFF4C2) : Colors.white,
+          border: Border.all(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC), width: selected ? 2 : 1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 30, color: const Color(0xFF17212B)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+          Text(eta, style: const TextStyle(fontSize: 11, color: Color(0xFF687386))),
+          Text(price, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _showPreferences() async {
+    await showModalBottomSheet<void>(
+      context: context, isScrollControlled: true,
+      builder: (context) => SafeArea(child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Пожелания к заказу', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 12),
+          TextField(controller: _noteController, maxLines: 2, decoration: const InputDecoration(labelText: 'Комментарий водителю')),
+          const SizedBox(height: 8),
+          CheckboxListTile(value: false, onChanged: (_) => _message('Добавьте пожелание в комментарий'), title: const Text('Детское кресло'), contentPadding: EdgeInsets.zero),
+          CheckboxListTile(value: false, onChanged: (_) => _message('Добавьте пожелание в комментарий'), title: const Text('Нужны грузчики'), contentPadding: EdgeInsets.zero),
+          Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Готово'))),
+        ]),
+      )),
     );
   }
 
