@@ -679,7 +679,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         final order = await repository.getOrder(orderId: orderId);
         if (!mounted) return;
         setState(() => _createdOrder = order);
-        await _saveOrderToHistory(order);
+        await _saveOrderState(order);
       } on JibekApiException catch (error) {
         if (error.statusCode == 404 || error.statusCode == 403) {
           await preferences.remove('jibek_passenger_active_order_id');
@@ -711,6 +711,17 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     );
   }
 
+  Future<void> _saveOrderState(JibekOrderRequest order) async {
+    await _saveOrderToHistory(order);
+    final isTerminal = order.status == JibekOrderStatus.completed ||
+        order.status == JibekOrderStatus.cancelled;
+    if (!isTerminal) return;
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getString('jibek_passenger_active_order_id') == order.id) {
+      await preferences.remove('jibek_passenger_active_order_id');
+    }
+  }
+
   String _statusLabel(JibekOrderStatus status) => switch (status) {
         JibekOrderStatus.searching => 'Ищем водителя',
         JibekOrderStatus.accepted => 'Водитель принял заказ',
@@ -740,7 +751,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       final updated = await repository.getOrder(orderId: order.id);
       if (!mounted) return;
       setState(() => _createdOrder = updated);
-      await _saveOrderToHistory(updated);
+      await _saveOrderState(updated);
       _message('Статус обновлён: ${_statusLabel(updated.status)}');
     } on JibekApiException catch (e) {
       _message('Не удалось обновить статус: ${e.message}');
@@ -782,7 +793,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       );
       if (!mounted) return;
       setState(() => _createdOrder = updated);
-      await _saveOrderToHistory(updated);
+      await _saveOrderState(updated);
       _message('Заявка отменена');
     } on JibekApiException catch (e) {
       _message('Не удалось отменить заявку: ${e.message}');
