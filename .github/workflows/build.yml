@@ -217,6 +217,26 @@ jobs:
           if marker not in manifest:
               raise SystemExit("Android manifest has no application element")
           manifest = manifest.replace(marker, "\n".join(permissions) + "\n    " + marker, 1)
+          # Passenger app explicitly removes permissions contributed by transitive plugins.
+          if application_id == "kz.jibekzholy.client":
+              import xml.etree.ElementTree as ET
+              android_ns = "http://schemas.android.com/apk/res/android"
+              tools_ns = "http://schemas.android.com/tools"
+              ET.register_namespace("android", android_ns)
+              ET.register_namespace("tools", tools_ns)
+              root = ET.fromstring(manifest)
+              root.set("xmlns:tools", tools_ns)
+              for permission in [
+                  "android.permission.ACCESS_BACKGROUND_LOCATION",
+                  "android.permission.RECORD_AUDIO",
+                  "android.permission.READ_CONTACTS",
+                  "android.permission.CALL_PHONE",
+              ]:
+                  node = ET.SubElement(root, "uses-permission")
+                  node.set(f"{{{android_ns}}}name", permission)
+                  node.set(f"{{{tools_ns}}}node", "remove")
+              manifest = ET.tostring(root, encoding="unicode", xml_declaration=False)
+
           manifest_file.write_text(manifest, encoding="utf-8")
 
           print(f"Configured applicationId: {application_id}")
@@ -225,6 +245,33 @@ jobs:
 
               flutter pub get
               flutter build apk --release
+
+              if [[ "$application_id" == "kz.jibekzholy.client" ]]; then
+                python3 - <<'PY'
+          import pathlib
+          import xml.etree.ElementTree as ET
+
+          candidates = [
+              pathlib.Path("build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml"),
+              pathlib.Path("build/app/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml"),
+          ]
+          merged = next((p for p in candidates if p.is_file()), None)
+          if merged is None:
+              raise SystemExit("Merged passenger AndroidManifest.xml not found; cannot verify Google Play permissions")
+          root = ET.parse(merged).getroot()
+          android = "{http://schemas.android.com/apk/res/android}name"
+          forbidden = {
+              "android.permission.ACCESS_BACKGROUND_LOCATION",
+              "android.permission.RECORD_AUDIO",
+              "android.permission.READ_CONTACTS",
+              "android.permission.CALL_PHONE",
+          }
+          found = sorted(node.get(android) for node in root.findall("uses-permission") if node.get(android) in forbidden)
+          if found:
+              raise SystemExit("Passenger merged manifest contains forbidden permissions: " + ", ".join(found))
+          print("Verified passenger merged manifest: no background location, microphone, contacts or call permissions.")
+          PY
+              fi
             )
             cp "$app_dir/build/app/outputs/flutter-apk/app-release.apk" "dist/$output_name"
             test -s "dist/$output_name"
