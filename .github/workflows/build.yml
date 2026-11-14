@@ -163,6 +163,11 @@ jobs:
               "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
               "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
           ]
+          # Only the driver app needs Android notification permission for new ride alerts.
+          if application_id == "kz.jibekzholy.driverapp":
+              permissions.append(
+                  "    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />"
+              )
           missing = [line for line in permissions if line.split('"')[1] not in manifest]
           if missing:
               marker = "<application"
