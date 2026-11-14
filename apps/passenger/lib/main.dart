@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'passenger_home_page.dart';
 
 void main() => runApp(const JibekPassengerApp());
 
@@ -20,7 +21,7 @@ class JibekPassengerApp extends StatelessWidget {
         title: 'Bake Taxi',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
-        home: const PassengerMapPage(),
+        home: const PassengerHomePage(),
       );
 }
 
@@ -31,7 +32,9 @@ class PlaceResult {
 }
 
 class PassengerMapPage extends StatefulWidget {
-  const PassengerMapPage({super.key});
+  const PassengerMapPage({super.key, this.initialService = JibekServiceType.cityTaxi});
+
+  final JibekServiceType initialService;
 
   @override
   State<PassengerMapPage> createState() => _PassengerMapPageState();
@@ -49,7 +52,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   LatLng? _toPoint;
   List<LatLng> _route = [];
   String _class = 'Эконом';
-  JibekServiceType _service = JibekServiceType.cityTaxi;
+  late JibekServiceType _service = widget.initialService;
   String? _distanceLabel;
   String? _durationLabel;
   bool _locating = false;
