@@ -158,30 +158,65 @@ jobs:
               manifest,
               count=1,
           )
-          permissions = [
-              "    <uses-permission android:name=\"android.permission.INTERNET\" />",
-              "    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />",
-              "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
-              "    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
-              "    <uses-permission android:name=\"android.permission.ACCESS_BACKGROUND_LOCATION\" />",
-              "    <uses-permission android:name=\"android.permission.CAMERA\" />",
-              "    <uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\" />",
-              "    <uses-permission android:name=\"android.permission.READ_MEDIA_AUDIO\" />",
-              "    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" android:maxSdkVersion=\"32\" />",
-              "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />",
-              "    <uses-permission android:name=\"android.permission.CALL_PHONE\" />",
-              "    <uses-permission android:name=\"android.permission.READ_PHONE_STATE\" />",
-              "    <uses-permission android:name=\"android.permission.READ_CONTACTS\" />",
-              "    <uses-permission android:name=\"android.permission.ACTIVITY_RECOGNITION\" />",
-              "    <uses-permission android:name=\"android.permission.FOREGROUND_SERVICE\" />",
-              "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" />",
+          # Keep Android permissions scoped to each APK role.
+          common_permissions = [
+              "INTERNET",
           ]
-          missing = [line for line in permissions if line.split('"')[1] not in manifest]
-          if missing:
-              marker = "<application"
-              if marker not in manifest:
-                  raise SystemExit("Android manifest has no application element")
-              manifest = manifest.replace(marker, "\n".join(missing) + "\n    " + marker, 1)
+          if application_id == "kz.jibekzholy.client":
+              permission_names = common_permissions + [
+                  "ACCESS_NETWORK_STATE",
+                  "ACCESS_FINE_LOCATION",
+                  "ACCESS_COARSE_LOCATION",
+                  "POST_NOTIFICATIONS",
+              ]
+          elif application_id == "kz.jibekzholy.driverapp":
+              permission_names = common_permissions + [
+                  "POST_NOTIFICATIONS",
+                  "ACCESS_FINE_LOCATION",
+                  "ACCESS_COARSE_LOCATION",
+                  "ACCESS_BACKGROUND_LOCATION",
+                  "CAMERA",
+                  "READ_MEDIA_IMAGES",
+                  "READ_MEDIA_AUDIO",
+                  "RECORD_AUDIO",
+                  "CALL_PHONE",
+                  "READ_CONTACTS",
+                  "ACTIVITY_RECOGNITION",
+                  "FOREGROUND_SERVICE",
+                  "SYSTEM_ALERT_WINDOW",
+              ]
+          elif application_id == "kz.jibekzholy.owneradmin":
+              permission_names = common_permissions + [
+                  "POST_NOTIFICATIONS",
+                  "READ_MEDIA_IMAGES",
+              ]
+          else:
+              raise SystemExit(f"Unknown Bake Taxi applicationId: {application_id}")
+
+          # Remove any previously injected permissions before writing the exact role list.
+          manifest = re.sub(
+              r'\\s*<uses-permission(?:-sdk-23)?\\b[^>]*/>\\s*',
+              lambda match: match.group(0) if not any(
+                  f"android.permission.{name}" in match.group(0)
+                  for name in [
+                      "INTERNET", "ACCESS_NETWORK_STATE", "POST_NOTIFICATIONS",
+                      "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION",
+                      "ACCESS_BACKGROUND_LOCATION", "CAMERA", "READ_MEDIA_IMAGES",
+                      "READ_MEDIA_AUDIO", "READ_EXTERNAL_STORAGE", "RECORD_AUDIO",
+                      "CALL_PHONE", "READ_PHONE_STATE", "READ_CONTACTS",
+                      "ACTIVITY_RECOGNITION", "FOREGROUND_SERVICE", "SYSTEM_ALERT_WINDOW"
+                  ]
+              ) else "",
+              manifest,
+          )
+          permissions = [
+              f'    <uses-permission android:name="android.permission.{name}" />'
+              for name in permission_names
+          ]
+          marker = "<application"
+          if marker not in manifest:
+              raise SystemExit("Android manifest has no application element")
+          manifest = manifest.replace(marker, "\\n".join(permissions) + "\\n    " + marker, 1)
           manifest_file.write_text(manifest, encoding="utf-8")
 
           print(f"Configured applicationId: {application_id}")
