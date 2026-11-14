@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:latlong2/latlong.dart';
+import 'driver_profile_page.dart';
+import 'driver_search_settings.dart';
 
 void main() => runApp(const JibekDriverApp());
 
@@ -16,7 +18,7 @@ class JibekDriverApp extends StatelessWidget {
         title: 'Bake Taxi Водитель',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
-        home: const DriverMapPage(),
+        home: const DriverAppShell(),
       );
 }
 
@@ -126,6 +128,17 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     ),
                   ),
                   const Spacer(),
+                  Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 3,
+                    child: IconButton(
+                      tooltip: 'Настройки поиска и тарифы',
+                      onPressed: () => showDriverSearchSettings(context),
+                      icon: const Icon(Icons.tune_rounded, color: Color(0xFF10243A)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Material(
                     color: Colors.white,
                     shape: const CircleBorder(),
@@ -498,6 +511,37 @@ class _DriverMapPageState extends State<DriverMapPage> {
       },
       selectedColor: const Color(0xFFE8D5AC),
       side: BorderSide(color: selected ? const Color(0xFFD6A84F) : const Color(0xFFE1E6EC)),
+    );
+  }
+}
+
+
+class DriverAppShell extends StatefulWidget {
+  const DriverAppShell({super.key});
+  @override
+  State<DriverAppShell> createState() => _DriverAppShellState();
+}
+
+class _DriverAppShellState extends State<DriverAppShell> {
+  int _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isProfile = _tab == 4;
+    return Scaffold(
+      body: isProfile ? const DriverProfilePage() : const DriverMapPage(),
+      bottomNavigationBar: NavigationBar(
+        height: 68,
+        selectedIndex: _tab,
+        onDestinationSelected: (index) => setState(() => _tab = index),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Домой'),
+          NavigationDestination(icon: Icon(Icons.work_outline_rounded), selectedIcon: Icon(Icons.work_rounded), label: 'По делам'),
+          NavigationDestination(icon: Icon(Icons.location_city_outlined), selectedIcon: Icon(Icons.location_city_rounded), label: 'Мой район'),
+          NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route_rounded), label: 'Межгород'),
+          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Профиль'),
+        ],
+      ),
     );
   }
 }
