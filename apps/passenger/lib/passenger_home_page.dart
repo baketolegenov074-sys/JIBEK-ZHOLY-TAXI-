@@ -160,9 +160,9 @@ class _IntercityPageState extends State<IntercityPage> {
       const SizedBox(height: 10),
       TextField(controller: _destination, decoration: const InputDecoration(prefixIcon: Icon(Icons.location_on), labelText: 'Куда', hintText: 'Введите город')),
       const SizedBox(height: 20),
-      Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('С попутчиками', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        const Text('Место в машине', style: TextStyle(color: _muted)),
+      Card(child: Column(children: [
+        RadioListTile<String>(value: 'Место в машине', groupValue: _tripType, onChanged: (v) => setState(() => _tripType = v ?? 'Место в машине'), title: const Text('С попутчиками', style: TextStyle(fontWeight: FontWeight.w900)), subtitle: const Text('Место в машине')),
+        Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
         Row(children: [
           const Expanded(child: Text('Количество мест', style: TextStyle(fontWeight: FontWeight.w700))),
@@ -171,7 +171,8 @@ class _IntercityPageState extends State<IntercityPage> {
           IconButton(onPressed: _seats < 4 ? () => setState(() => _seats++) : null, icon: const Icon(Icons.add_circle_outline)),
         ]),
         const Text('Цена будет рассчитана по маршруту', style: TextStyle(color: _muted, fontSize: 12)),
-      ]))),
+      ])),
+      ])),
       Card(child: RadioListTile<String>(
         value: 'Весь салон', groupValue: _tripType, onChanged: (v) => setState(() => _tripType = v ?? 'Место в машине'),
         title: const Text('Весь салон', style: TextStyle(fontWeight: FontWeight.w900)),
