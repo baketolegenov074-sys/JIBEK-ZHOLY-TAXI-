@@ -76,6 +76,8 @@ class _DriverMapPageState extends State<DriverMapPage> {
     );
   }
 
+  bool _alternateMap = false;
+
   @override
   Widget build(BuildContext context) {
     final markers = _driverPoint == null
@@ -83,84 +85,88 @@ class _DriverMapPageState extends State<DriverMapPage> {
         : [
             Marker(
               point: _driverPoint!,
-              width: 48,
-              height: 48,
-              child: const Icon(Icons.local_taxi_rounded,
-                  color: Color(0xFF168C8C), size: 38),
+              width: 54,
+              height: 54,
+              child: const Icon(Icons.navigation_rounded,
+                  color: Color(0xFF168C8C), size: 43),
             ),
           ];
 
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(initialCenter: _shymkent, initialZoom: 13),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'kz.jibekzholy.driverapp',
-              ),
-              MarkerLayer(markers: markers),
-              const RichAttributionWidget(
-                attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
-              ),
-            ],
+          Positioned.fill(
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(initialCenter: _shymkent, initialZoom: 13),
+              children: [
+                TileLayer(
+                  urlTemplate: _alternateMap
+                      ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
+                      : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: _alternateMap ? const ['a', 'b', 'c'] : const [],
+                  userAgentPackageName: 'kz.jibekzholy.driverapp',
+                ),
+                MarkerLayer(markers: markers),
+                const RichAttributionWidget(
+                  attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
+                ),
+              ],
+            ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10243A),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10, right: 14),
+                child: Column(
+                  children: [
+                    _mapAction(Icons.tune_rounded, 'Настройки поиска',
+                        () => showDriverSearchSettings(context)),
+                    const SizedBox(height: 12),
+                    _mapAction(Icons.add, 'Приблизить',
+                        () => _mapController.move(_mapController.camera.center,
+                            (_mapController.camera.zoom + 1).clamp(3, 19))),
+                    const SizedBox(height: 8),
+                    _mapAction(Icons.remove, 'Отдалить',
+                        () => _mapController.move(_mapController.camera.center,
+                            (_mapController.camera.zoom - 1).clamp(3, 19))),
+                    const SizedBox(height: 8),
+                    _mapAction(Icons.layers_outlined, 'Слои карты',
+                        () => setState(() => _alternateMap = !_alternateMap)),
+                    const SizedBox(height: 8),
+                    _mapAction(
+                      _loadingLocation ? Icons.hourglass_top : Icons.my_location,
+                      'Моё местоположение',
+                      _loadingLocation ? () {} : _locateDriver,
                     ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Bake Taxi Водитель', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        Text('КАБИНЕТ ВОДИТЕЛЯ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .8)),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(),
-                    elevation: 3,
-                    child: IconButton(
-                      tooltip: 'Настройки поиска и тарифы',
-                      onPressed: () => showDriverSearchSettings(context),
-                      icon: const Icon(Icons.tune_rounded, color: Color(0xFF10243A)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(),
-                    elevation: 3,
-                    child: IconButton(
-                      tooltip: 'Моё местоположение',
-                      onPressed: _loadingLocation ? null : _locateDriver,
-                      icon: _loadingLocation
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, color: Color(0xFF10243A)),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 285),
+                child: FloatingActionButton.small(
+                  heroTag: 'driver-address-search',
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF10243A),
+                  onPressed: _showAddressSearch,
+                  child: const Icon(Icons.search_rounded),
+                ),
               ),
             ),
           ),
           DraggableScrollableSheet(
-            initialChildSize: .48,
-            minChildSize: .38,
+            initialChildSize: .43,
+            minChildSize: .30,
             maxChildSize: .78,
             snap: true,
-            snapSizes: const [.48, .78],
+            snapSizes: const [.43, .78],
             builder: (context, controller) => Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -169,89 +175,75 @@ class _DriverMapPageState extends State<DriverMapPage> {
               ),
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                padding: const EdgeInsets.fromLTRB(18, 11, 18, 105),
                 children: [
-                  Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
-                  const SizedBox(height: 17),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Статус водителя', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
-                            const SizedBox(height: 4),
-                            Text(_online ? 'Вы включили режим на линии' : 'Вы сейчас не принимаете заявки',
-                                style: const TextStyle(color: Color(0xFF687386), fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      Switch.adaptive(
-                        value: _online,
-                        activeColor: const Color(0xFF168C8C),
-                        onChanged: _loadingOrders ? null : _setOnline,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                  Center(child: Container(width: 42, height: 4,
+                    decoration: BoxDecoration(color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
+                  const SizedBox(height: 15),
+                  Row(children: [
+                    Expanded(child: _dashboardMetric(
+                      icon: Icons.bolt_rounded, title: 'Приоритет', value: '+7',
+                      tint: const Color(0xFFB58A16))),
+                    const SizedBox(width: 10),
+                    Expanded(child: _dashboardMetric(
+                      icon: Icons.account_balance_wallet_outlined, title: 'Заработок',
+                      value: '0 KZT', subtitle: '0 заказов', tint: const Color(0xFF16834A))),
+                  ]),
+                  const SizedBox(height: 16),
+                  const Text('Цели и бонусы', style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+                  const SizedBox(height: 9),
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: _online ? const Color(0xFFEAF5F1) : const Color(0xFFF1F3F6),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(_online ? Icons.wifi_tethering_rounded : Icons.pause_circle_outline,
-                            color: _online ? const Color(0xFF16834A) : const Color(0xFF687386), size: 28),
-                        const SizedBox(width: 11),
-                        Expanded(
-                          child: Text(
-                            _online ? 'Ожидание подключения к системе заказов' : 'Включите режим, когда будете готовы работать',
-                            style: const TextStyle(fontWeight: FontWeight.w700, height: 1.3),
-                          ),
-                        ),
-                      ],
+                    decoration: BoxDecoration(color: const Color(0xFFFFF8DF),
+                      borderRadius: BorderRadius.circular(17)),
+                    child: Row(children: [
+                      const Icon(Icons.workspace_premium_outlined, color: Color(0xFFB58A16), size: 28),
+                      const SizedBox(width: 11),
+                      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Бонусы и цели смены', style: TextStyle(fontWeight: FontWeight.w800)),
+                        SizedBox(height: 3),
+                        Text('Подключите доступные тарифы и выполняйте заказы',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF687386))),
+                      ])),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF687386)),
+                    ]),
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    height: 58,
+                    child: FilledButton(
+                      onPressed: _loadingOrders ? null : () => _setOnline(!_online),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _online ? const Color(0xFF16834A) : const Color(0xFFFFD400),
+                        foregroundColor: const Color(0xFF10243A),
+                        shape: const StadiumBorder(),
+                        elevation: 0,
+                      ),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Text(_loadingOrders ? 'Подождите…' : (_online ? 'На линии' : 'Офлайн / Выйти на линию'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                        const SizedBox(width: 9),
+                        Icon(_online ? Icons.check_circle_rounded : Icons.arrow_forward_rounded),
+                      ]),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  const Text('Какие заказы готовы выполнять?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _serviceChip('Такси', Icons.local_taxi_rounded),
-                      _serviceChip('Межгород', Icons.route_rounded),
-                      _serviceChip('Посылки', Icons.inventory_2_rounded),
-                      _serviceChip('Эвакуатор', Icons.car_crash_rounded),
-                      _serviceChip('Шиномонтаж', Icons.tire_repair_rounded),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Row(children: [const Expanded(child: Text('Новые заказы', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: Color(0xFF10243A)))), IconButton(onPressed: _loadingOrders || !_online ? null : _refreshOrders, icon: const Icon(Icons.refresh))]),
-                  const SizedBox(height: 10),
-                  if (_loadingOrders) const Center(child: Padding(padding: EdgeInsets.all(18), child: CircularProgressIndicator())),
-                  if (_activeOrder != null) _activeOrderCard(_activeOrder!),
-                  ..._orders.map(_orderCard),
-                  if (_orders.isEmpty && !_loadingOrders) Container(
-                    padding: const EdgeInsets.symmetric(vertical: 23, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE4E9EF)),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(Icons.inbox_outlined, size: 36, color: Color(0xFF9AA5B2)),
-                        SizedBox(height: 8),
-                        Text('Пока нет заявок', style: TextStyle(fontWeight: FontWeight.w800)),
-                        SizedBox(height: 4),
-                        Text(_online ? 'Нажмите обновить, чтобы проверить новые заявки.' : 'Включите режим на линии, чтобы получать заявки.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Color(0xFF687386), fontSize: 12, height: 1.4)),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 13),
+                  if (_online) ...[
+                    Row(children: [
+                      const Expanded(child: Text('Новые заказы', style: TextStyle(
+                        fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF10243A)))),
+                      IconButton(onPressed: _loadingOrders ? null : _refreshOrders,
+                        icon: const Icon(Icons.refresh_rounded)),
+                    ]),
+                    if (_loadingOrders) const Center(child: CircularProgressIndicator()),
+                    if (_activeOrder != null) _activeOrderCard(_activeOrder!),
+                    ..._orders.map(_orderCard),
+                    if (_orders.isEmpty && !_loadingOrders)
+                      const Padding(padding: EdgeInsets.all(12),
+                        child: Text('Пока нет заявок', textAlign: TextAlign.center,
+                          style: TextStyle(color: Color(0xFF687386)))),
+                  ],
                 ],
               ),
             ),
@@ -260,6 +252,96 @@ class _DriverMapPageState extends State<DriverMapPage> {
       ),
     );
   }
+
+  Widget _mapAction(IconData icon, String tooltip, VoidCallback onPressed) =>
+      Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 4,
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          icon: Icon(icon, color: const Color(0xFF10243A)),
+        ),
+      );
+
+  Widget _dashboardMetric({required IconData icon, required String title,
+      required String value, String? subtitle, required Color tint}) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        decoration: BoxDecoration(color: const Color(0xFFF4F5F7),
+          borderRadius: BorderRadius.circular(17)),
+        child: Row(children: [
+          Icon(icon, color: tint, size: 25),
+          const SizedBox(width: 9),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 11, color: Color(0xFF687386))),
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900,
+              color: Color(0xFF10243A))),
+            if (subtitle != null) Text(subtitle,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF687386))),
+          ])),
+        ]),
+      );
+
+  Future<void> _showAddressSearch() async {
+    final controller = TextEditingController();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          decoration: const BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(
+                color: const Color(0xFFD9DEE5), borderRadius: BorderRadius.circular(8)))),
+              const SizedBox(height: 18),
+              const Text('Поиск заказов по адресу', style: TextStyle(
+                fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF10243A))),
+              const SizedBox(height: 13),
+              TextField(controller: controller, textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Адрес или место',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: TextButton(onPressed: () => Navigator.pop(sheetContext),
+                    child: const Text('Карта')),
+                  filled: true, fillColor: const Color(0xFFF3F5F7),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide.none))),
+              const SizedBox(height: 12),
+              const Text('Быстрые режимы', style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 9),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                _searchModeChip('Домой', Icons.home_rounded),
+                _searchModeChip('По делам', Icons.work_outline_rounded),
+                _searchModeChip('Мой район', Icons.location_city_rounded),
+                _searchModeChip('Межгород', Icons.route_rounded),
+              ]),
+              const SizedBox(height: 12),
+              const Text('Сохранённые адреса', style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 7),
+              const ListTile(dense: true, contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.home_outlined), title: Text('Дом'), subtitle: Text('Адрес не добавлен')),
+              const ListTile(dense: true, contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.work_outline), title: Text('Работа'), subtitle: Text('Адрес не добавлен')),
+            ]),
+        ),
+      ),
+    );
+    controller.dispose();
+  }
+
+  Widget _searchModeChip(String label, IconData icon) => ActionChip(
+    avatar: Icon(icon, size: 18, color: const Color(0xFF10243A)),
+    label: Text(label),
+    onPressed: () => _notice('Режим «$label» будет применён после настройки адреса'),
+  );
+
 
 
   Set<JibekServiceType> get _selectedServices {
@@ -535,10 +617,10 @@ class _DriverAppShellState extends State<DriverAppShell> {
         selectedIndex: _tab,
         onDestinationSelected: (index) => setState(() => _tab = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Домой'),
-          NavigationDestination(icon: Icon(Icons.work_outline_rounded), selectedIcon: Icon(Icons.work_rounded), label: 'По делам'),
-          NavigationDestination(icon: Icon(Icons.location_city_outlined), selectedIcon: Icon(Icons.location_city_rounded), label: 'Мой район'),
+          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Заказы'),
           NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route_rounded), label: 'Межгород'),
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Деньги'),
+          NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: 'Чаты'),
           NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Профиль'),
         ],
       ),
