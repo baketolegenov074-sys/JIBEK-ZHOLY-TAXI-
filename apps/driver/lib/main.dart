@@ -6,7 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'permissions/startup_permissions.dart';
 import 'driver_profile_page.dart';
 import 'driver_search_settings.dart';
 
@@ -48,20 +48,9 @@ class _DriverMapPageState extends State<DriverMapPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _requestNotificationPermission();
+      await requestBakeTaxiPermissions();
       if (mounted) await _locateDriver();
     });
-  }
-
-  Future<void> _requestNotificationPermission() async {
-    try {
-      final status = await Permission.notification.status;
-      if (!status.isGranted && !status.isPermanentlyDenied) {
-        await Permission.notification.request();
-      }
-    } catch (_) {
-      // Notification permission is optional; location and app startup must continue.
-    }
   }
 
   Future<void> _locateDriver() async {
