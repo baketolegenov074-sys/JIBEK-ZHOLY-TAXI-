@@ -533,7 +533,13 @@ class _IntercityPageState extends State<IntercityPage> {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Укажите город назначения')));
             return;
           }
-          Navigator.push(context, MaterialPageRoute(builder: (_) => PassengerMapPage(initialService: JibekServiceType.intercity)));
+          Navigator.push(context, MaterialPageRoute(builder: (_) => PassengerMapPage(
+            initialService: JibekServiceType.intercity,
+            initialDestination: _destination.text.trim(),
+            initialNote: _tripType == 'Место в машине'
+                ? 'Межгород: с попутчиками; мест: $_seats'
+                : 'Межгород: весь салон',
+          )));
         },
         child: const Text('Продолжить', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
       )),
