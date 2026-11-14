@@ -52,7 +52,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   LatLng? _toPoint;
   List<LatLng> _route = [];
   String _class = 'Эконом';
-  late JibekServiceType _service = widget.initialService;
+  late JibekServiceType _service;
   String? _distanceLabel;
   String? _durationLabel;
   bool _locating = false;
@@ -67,6 +67,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   @override
   void initState() {
     super.initState();
+    _service = widget.initialService;
     _restoreSavedOrder();
   }
 
