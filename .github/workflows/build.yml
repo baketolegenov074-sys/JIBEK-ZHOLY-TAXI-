@@ -195,7 +195,7 @@ jobs:
 
           # Remove any previously injected permissions before writing the exact role list.
           manifest = re.sub(
-              r'\\s*<uses-permission(?:-sdk-23)?\\b[^>]*/>\\s*',
+              r'\s*<uses-permission(?:-sdk-23)?\b[^>]*/>\s*',
               lambda match: match.group(0) if not any(
                   f"android.permission.{name}" in match.group(0)
                   for name in [
@@ -216,7 +216,7 @@ jobs:
           marker = "<application"
           if marker not in manifest:
               raise SystemExit("Android manifest has no application element")
-          manifest = manifest.replace(marker, "\\n".join(permissions) + "\\n    " + marker, 1)
+          manifest = manifest.replace(marker, "\n".join(permissions) + "\n    " + marker, 1)
           manifest_file.write_text(manifest, encoding="utf-8")
 
           print(f"Configured applicationId: {application_id}")
