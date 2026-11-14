@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -75,6 +76,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
     }
   }
 
+  @override
+  void dispose() {
+    _ordersTimer?.cancel();
+    _mapController.dispose();
+    super.dispose();
+  }
+
   void _notice(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -83,6 +91,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
   }
 
   bool _alternateMap = false;
+  Timer? _ordersTimer;
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +256,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     ..._orders.map(_orderCard),
                     if (_orders.isEmpty && !_loadingOrders)
                       const Padding(padding: EdgeInsets.all(12),
-                        child: Text('Пока нет заявок', textAlign: TextAlign.center,
+                        child: Text('Свободный эфир: пока нет доступных заказов', textAlign: TextAlign.center,
                           style: TextStyle(color: Color(0xFF687386)))),
                   ],
                 ],
@@ -385,6 +394,14 @@ class _DriverMapPageState extends State<DriverMapPage> {
       setState(() {
         _online = value;
         if (!value) {
+          _ordersTimer?.cancel();
+        } else {
+          _ordersTimer?.cancel();
+          _ordersTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+            if (mounted && _online && !_loadingOrders && _activeOrder == null) _refreshOrders();
+          });
+        }
+        if (!value) {
           _orders = [];
           _activeOrder = null;
         }
@@ -445,8 +462,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
     child: Padding(
       padding: const EdgeInsets.all(14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_serviceLabel(order.service), style: const TextStyle(fontWeight: FontWeight.w900)),
+        Row(children: [
+          Expanded(child: Text(_serviceLabel(order.service), style: const TextStyle(fontWeight: FontWeight.w900))),
+          if (order.isBoosted) Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFFFE1B8), borderRadius: BorderRadius.circular(20)), child: const Text('🔥 Повышенная цена', style: TextStyle(color: Color(0xFFB74700), fontWeight: FontWeight.w900, fontSize: 11))),
+        ]),
         const SizedBox(height: 7),
+        Text('${order.priceKzt} ₸', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF16834A))),
+        Text('До подачи: ${_pickupDistance(order)}', style: const TextStyle(color: Color(0xFF687386), fontWeight: FontWeight.w700)),
         Text('Откуда: ' + (order.pickup.address ?? 'Точка на карте')),
         Text('Куда: ' + (order.destination.address ?? 'Точка на карте')),
         if (order.vehicleClass != null) Text('Класс: ' + order.vehicleClass!),
@@ -463,6 +485,13 @@ class _DriverMapPageState extends State<DriverMapPage> {
       ]),
     ),
   );
+
+  String _pickupDistance(JibekOrderRequest order) {
+    final point = _driverPoint;
+    if (point == null) return 'геолокация недоступна';
+    final meters = Geolocator.distanceBetween(point.latitude, point.longitude, order.pickup.latitude, order.pickup.longitude);
+    return meters >= 1000 ? '${(meters / 1000).toStringAsFixed(1)} км' : '${meters.round()} м';
+  }
 
   Future<void> _acceptOrder(JibekOrderRequest order) async {
     final repository = DevJibekApiRepository(baseUrl: _apiUrl, devUserIdProvider: () async => _devUserId);
