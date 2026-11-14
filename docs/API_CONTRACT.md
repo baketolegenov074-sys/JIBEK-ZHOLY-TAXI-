@@ -38,6 +38,9 @@ Order statuses: `draft`, `searching`, `accepted`, `driverArriving`,
     "longitude": 69.60,
     "address": "Шымкент, ..."
   },
+  "stops": [
+    {"latitude": 42.318, "longitude": 69.595, "address": "Шымкент, ..."}
+  ],
   "createdAt": "2026-11-12T10:00:00Z",
   "vehicleClass": "Эконом",
   "note": null,
@@ -45,7 +48,9 @@ Order statuses: `draft`, `searching`, `accepted`, `driverArriving`,
 }
 ```
 
-The backend assigns the passenger identity and validates coordinates,
+`stops` is optional for backward compatibility and supports at most one
+intermediate point. Existing orders without this field are treated as having
+no stops. The backend assigns the passenger identity and validates coordinates,
 service-specific required fields, service area and permitted status changes.
 
 ## Endpoints
