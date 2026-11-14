@@ -33,6 +33,12 @@ def test_create_order_and_driver_accepts_once(client):
         "/v1/driver/orders/available?services=cityTaxi", headers=HEAD_D
     )
     assert len(available.json()) == 1
+    assert available.json()[0]['priceKzt'] == 250
+    boosted = client.post(f"/v1/orders/{order_id}/boost", json={"amountKzt": 250}, headers=HEAD_P)
+    assert boosted.status_code == 200
+    assert boosted.json()['priceKzt'] == 500
+    assert boosted.json()['boostCount'] == 1
+    assert client.get("/v1/driver/orders/available?services=cityTaxi", headers=HEAD_D).json()[0]['priceKzt'] == 500
     accepted = client.post(f"/v1/orders/{order_id}/accept", headers=HEAD_D)
     assert accepted.status_code == 200
     assert accepted.json()["driverId"] == "driver-1"
