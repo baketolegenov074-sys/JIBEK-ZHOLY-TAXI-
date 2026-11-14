@@ -50,6 +50,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   final TextEditingController _noteController = TextEditingController();
   final TextEditingController _stopController = TextEditingController();
   bool _addStop = false;
+  LatLng? _stopPoint;
   String _paymentMethod = 'Наличные';
   bool _childSeat = false;
   bool _needMovers = false;
@@ -163,6 +164,36 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     );
   }
 
+  Future<void> _searchStop() async {
+    final query = _stopController.text.trim();
+    if (!_addStop) return;
+    if (query.isEmpty) {
+      _message('Введите адрес промежуточной остановки');
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final result = await _geocode('$query, Шымкент, Казахстан');
+      if (result == null) {
+        _message('Промежуточная остановка не найдена');
+        return;
+      }
+      setState(() {
+        _stopPoint = result.point;
+        _stopController.text = result.title;
+        _route = [];
+        _distanceLabel = null;
+        _durationLabel = null;
+      });
+      _mapController.move(result.point, 14);
+      if (_fromPoint != null && _toPoint != null) await _buildRoute();
+    } catch (e) {
+      _message('Ошибка поиска остановки: $e');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
   Future<void> _searchDestination() async {
     final query = _toController.text.trim();
     if (query.isEmpty) {
@@ -201,11 +232,17 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     }
     setState(() => _searching = true);
     try {
+      final routePoints = <LatLng>[
+        start,
+        if (_addStop && _stopPoint != null) _stopPoint!,
+        end,
+      ];
+      final coordinatesQuery = routePoints
+          .map((point) => '${point.longitude},${point.latitude}')
+          .join(';');
       final uri = Uri.parse(
         'https://router.project-osrm.org/route/v1/driving/'
-        '${start.longitude},${start.latitude};'
-        '${end.longitude},${end.latitude}'
-        '?overview=full&geometries=geojson',
+        '$coordinatesQuery?overview=full&geometries=geojson',
       );
       final response = await http.get(uri, headers: {
         'User-Agent': 'JibekZholyPassenger/1.0',
@@ -270,6 +307,11 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
           width: 42,
           height: 42,
           child: const Icon(Icons.my_location, color: Color(0xFF10243A), size: 32),
+        ),
+      if (_addStop && _stopPoint != null)
+        Marker(
+          point: _stopPoint!, width: 42, height: 42,
+          child: const Icon(Icons.more_horiz, color: Color(0xFFB7791F), size: 34),
         ),
       if (_toPoint != null)
         Marker(
@@ -372,11 +414,37 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                   const SizedBox(height: 9),
                   _placeField(Icons.location_on_rounded, 'Куда', _toController, onSubmitted: (_) => _searchDestination(), onChanged: (_) { setState(() { _toPoint = null; _route = []; _distanceLabel = null; _durationLabel = null; }); }),
                   Align(alignment: Alignment.centerRight, child: TextButton.icon(
-                    onPressed: () => setState(() => _addStop = !_addStop),
+                    onPressed: () => setState(() {
+                      _addStop = !_addStop;
+                      if (!_addStop) {
+                        _stopPoint = null;
+                        _stopController.clear();
+                      }
+                      _route = [];
+                      _distanceLabel = null;
+                      _durationLabel = null;
+                    }),
                     icon: Icon(_addStop ? Icons.remove_circle_outline : Icons.add_circle_outline),
                     label: Text(_addStop ? 'Убрать остановку' : 'Добавить остановку'),
                   )),
-                  if (_addStop) _placeField(Icons.more_horiz, 'Промежуточная остановка', _stopController, onSubmitted: (_) {}),
+                  if (_addStop) _placeField(
+                    Icons.more_horiz, 'Промежуточная остановка', _stopController,
+                    onSubmitted: (_) => _searchStop(),
+                    onChanged: (_) => setState(() {
+                      _stopPoint = null;
+                      _route = [];
+                      _distanceLabel = null;
+                      _durationLabel = null;
+                    }),
+                  ),
+                  if (_addStop) Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _searching ? null : _searchStop,
+                      icon: const Icon(Icons.search),
+                      label: const Text('Найти остановку'),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
@@ -640,6 +708,10 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
               : 'Укажите размер колёс и проблему');
       return;
     }
+    if (_addStop && _stopPoint == null) {
+      _message('Сначала найдите промежуточную остановку');
+      return;
+    }
     if (_fromPoint == null || _toPoint == null || _route.isEmpty) {
       _message('Сначала постройте маршрут'); return;
     }
@@ -659,6 +731,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         id: 'local-draft', service: _service,
         pickup: JibekGeoPoint(latitude: _fromPoint!.latitude, longitude: _fromPoint!.longitude, address: _fromController.text),
         destination: JibekGeoPoint(latitude: _toPoint!.latitude, longitude: _toPoint!.longitude, address: _toController.text),
+        stops: _addStop && _stopPoint != null
+            ? [JibekGeoPoint(latitude: _stopPoint!.latitude, longitude: _stopPoint!.longitude, address: _stopController.text)]
+            : const [],
         createdAt: DateTime.now(),
         vehicleClass: _service == JibekServiceType.cityTaxi ? _class : null,
         note: orderNote.isEmpty ? null : orderNote,
