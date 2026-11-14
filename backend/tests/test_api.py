@@ -40,6 +40,35 @@ def test_create_order_and_driver_accepts_once(client):
     second = client.post(f"/v1/orders/{order_id}/accept", headers={"X-Dev-User-Id": "driver-2"})
     assert second.status_code == 409
 
+def test_create_order_with_one_intermediate_stop(client):
+    stop = {"latitude": 42.318, "longitude": 69.595, "address": "Промежуточная точка"}
+    created = client.post(
+        "/v1/orders", json={**ORDER, "stops": [stop]}, headers=HEAD_P
+    )
+    assert created.status_code == 201
+    assert created.json()["stops"] == [stop]
+    restored = client.get(
+        f"/v1/orders/{created.json()['id']}", headers=HEAD_P
+    )
+    assert restored.status_code == 200
+    assert restored.json()["stops"] == [stop]
+
+
+def test_rejects_more_than_one_intermediate_stop(client):
+    stop = {"latitude": 42.318, "longitude": 69.595}
+    response = client.post(
+        "/v1/orders", json={**ORDER, "stops": [stop, stop]}, headers=HEAD_P
+    )
+    assert response.status_code == 422
+
+
+def test_rejects_stop_matching_pickup_or_destination(client):
+    response = client.post(
+        "/v1/orders", json={**ORDER, "stops": [ORDER["pickup"]]}, headers=HEAD_P
+    )
+    assert response.status_code == 422
+
+
 def test_rejects_same_points(client):
     bad = {**ORDER, "destination": ORDER["pickup"]}
     response = client.post("/v1/orders", json=bad, headers=HEAD_P)
