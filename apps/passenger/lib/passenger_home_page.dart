@@ -24,6 +24,14 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
   String _currentAddress = 'Шымкент • Нажмите, чтобы определить адрес';
   bool _loadingAddress = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadCurrentAddress();
+    });
+  }
+
   Future<void> _loadCurrentAddress() async {
     if (_loadingAddress) return;
     setState(() => _loadingAddress = true);
