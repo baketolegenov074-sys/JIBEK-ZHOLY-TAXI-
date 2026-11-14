@@ -13,7 +13,7 @@ class JibekDriverApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'ЖІБЕК ЖОЛЫ — Водитель',
+        title: 'Bake Taxi Водитель',
         debugShowCheckedModeBanner: false,
         theme: JibekTheme.light(),
         home: const DriverMapPage(),
@@ -120,7 +120,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ЖІБЕК ЖОЛЫ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                        Text('Bake Taxi Водитель', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
                         Text('КАБИНЕТ ВОДИТЕЛЯ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .8)),
                       ],
                     ),
