@@ -666,6 +666,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         final order = await repository.getOrder(orderId: orderId);
         if (!mounted) return;
         setState(() => _createdOrder = order);
+        await _saveOrderToHistory(order);
       } on JibekApiException catch (error) {
         if (error.statusCode == 404 || error.statusCode == 403) {
           await preferences.remove('jibek_passenger_active_order_id');
