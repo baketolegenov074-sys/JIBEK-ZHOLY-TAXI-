@@ -88,7 +88,7 @@ jobs:
               for name in ("ic_launcher.png", "ic_launcher_round.png"):
                   target = target_dir / name
                   subprocess.run(
-                      ["magick", str(source), "-resize", f"{size}x{size}^",
+                      ["convert", str(source), "-resize", f"{size}x{size}^",
                        "-gravity", "center", "-extent", f"{size}x{size}", str(target)],
                       check=True,
                   )
