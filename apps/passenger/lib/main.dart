@@ -122,7 +122,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
         _message('Разрешите доступ к местоположению в настройках телефона');
         return;
       }
-      final position = await Geolocator.getCurrentPosition();
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
       final point = LatLng(position.latitude, position.longitude);
       final reverseUri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
         'lat': position.latitude.toString(),
@@ -147,7 +152,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
             .map((part) => part.toString()).join(', ');
         if (addressText.isEmpty) addressText = reverseData['display_name']?.toString() ?? '';
       }
-      if (addressText.isEmpty) addressText = 'Точка на карте, Шымкент';
+      if (addressText.isEmpty) {
+        addressText = 'Шымкент • ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+      }
       setState(() {
         _fromPoint = point;
         _fromController.text = addressText;
@@ -901,7 +908,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
 
   Future<void> _searchFrom() async {
     final query = _fromController.text.trim();
-    if (query.isEmpty || query == 'Моё местоположение') {
+    if (query.isEmpty) {
       await _findMe();
       return;
     }
