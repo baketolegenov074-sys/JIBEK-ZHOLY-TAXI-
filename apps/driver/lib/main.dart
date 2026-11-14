@@ -36,7 +36,7 @@ class _DriverMapPageState extends State<DriverMapPage> {
   LatLng? _driverPoint;
   bool _online = false;
   bool _loadingLocation = false;
-  final Set<String> _services = {'Такси'};
+  final Set<String> _services = {'Такси', 'Межгород', 'Посылки', 'Грузовой', 'Эвакуатор', 'Шиномонтаж'};
   List<JibekOrderRequest> _orders = [];
   JibekOrderRequest? _activeOrder;
   bool _loadingOrders = false;
@@ -440,6 +440,16 @@ class _DriverMapPageState extends State<DriverMapPage> {
       } else {
         final orders =
             await repository.getAvailableOrders(services: _selectedServices);
+        final driverPoint = _driverPoint;
+        if (driverPoint != null) {
+          orders.sort((a, b) => Geolocator.distanceBetween(
+            driverPoint.latitude, driverPoint.longitude,
+            a.pickup.latitude, a.pickup.longitude,
+          ).compareTo(Geolocator.distanceBetween(
+            driverPoint.latitude, driverPoint.longitude,
+            b.pickup.latitude, b.pickup.longitude,
+          )));
+        }
         if (mounted) {
           setState(() {
             _activeOrder = null;
