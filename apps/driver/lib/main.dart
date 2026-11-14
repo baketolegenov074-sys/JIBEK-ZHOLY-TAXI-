@@ -613,23 +613,106 @@ class DriverAppShell extends StatefulWidget {
 class _DriverAppShellState extends State<DriverAppShell> {
   int _tab = 0;
 
-  @override
-  Widget build(BuildContext context) {
-    final isProfile = _tab == 4;
-    return Scaffold(
-      body: isProfile ? const DriverProfilePage() : const DriverMapPage(),
-      bottomNavigationBar: NavigationBar(
-        height: 68,
-        selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Заказы'),
-          NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route_rounded), label: 'Межгород'),
-          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Деньги'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: 'Чаты'),
-          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Профиль'),
-        ],
-      ),
-    );
+  Widget _page() {
+    switch (_tab) {
+      case 0:
+        return const DriverMapPage();
+      case 1:
+        return const DriverSectionPage(
+          title: 'Межгород',
+          subtitle: 'Заказы между городами будут отображаться здесь',
+          icon: Icons.route_rounded,
+          detail: 'Включите приём заказов и выберите тариф «Межгород» в настройках поиска.',
+        );
+      case 2:
+        return const DriverSectionPage(
+          title: 'Деньги',
+          subtitle: 'Заработок и выплаты',
+          icon: Icons.account_balance_wallet_rounded,
+          detail: 'Здесь будет история заработка за смены и информация о выплатах.',
+        );
+      case 3:
+        return const DriverSectionPage(
+          title: 'Чаты',
+          subtitle: 'Сообщения',
+          icon: Icons.chat_bubble_rounded,
+          detail: 'Новые сообщения по заказам будут появляться здесь.',
+        );
+      default:
+        return const DriverProfilePage();
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: _page(),
+    bottomNavigationBar: NavigationBar(
+      height: 68,
+      selectedIndex: _tab,
+      onDestinationSelected: (index) => setState(() => _tab = index),
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Заказы'),
+        NavigationDestination(icon: Icon(Icons.route_outlined), selectedIcon: Icon(Icons.route_rounded), label: 'Межгород'),
+        NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Деньги'),
+        NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: 'Чаты'),
+        NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Профиль'),
+      ],
+    ),
+  );
+}
+
+class DriverSectionPage extends StatelessWidget {
+  const DriverSectionPage({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.detail,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFF5F6F8),
+    appBar: AppBar(
+      title: Text(title),
+      backgroundColor: Colors.white,
+      foregroundColor: const Color(0xFF10243A),
+      elevation: 0,
+    ),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 48, color: const Color(0xFFB58A16)),
+              const SizedBox(height: 16),
+              Text(title, style: const TextStyle(
+                fontSize: 22, fontWeight: FontWeight.w900,
+                color: Color(0xFF10243A))),
+              const SizedBox(height: 8),
+              Text(subtitle, textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15,
+                  fontWeight: FontWeight.w700, color: Color(0xFF344252))),
+              const SizedBox(height: 10),
+              Text(detail, textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFF687386), height: 1.4)),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
