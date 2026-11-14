@@ -40,6 +40,7 @@ class OrderCreate(BaseModel):
     stops: list[Point] = Field(default_factory=list, max_length=1)
     vehicleClass: str | None = Field(default=None, max_length=40, validate_default=True)
     note: str | None = Field(default=None, max_length=500)
+    priceKzt: int = Field(default=250, ge=250, le=10000000)
 
     @field_validator("vehicleClass")
     @classmethod
@@ -86,6 +87,11 @@ class OrderOut(BaseModel):
     status: Status
     createdAt: str
     stops: list[Point] = Field(default_factory=list)
+    priceKzt: int = 250
+    boostCount: int = 0
+
+class BoostUpdate(BaseModel):
+    amountKzt: Literal[250] = 250
 
 class StatusUpdate(BaseModel):
     status: Status
@@ -123,12 +129,18 @@ def init_db():
           destination_lat REAL NOT NULL, destination_lon REAL NOT NULL, destination_address TEXT,
           vehicle_class TEXT, note TEXT, passenger_id TEXT NOT NULL,
           driver_id TEXT, status TEXT NOT NULL, created_at TEXT NOT NULL,
-          stops_json TEXT NOT NULL DEFAULT '[]'
+          stops_json TEXT NOT NULL DEFAULT '[]',
+          price_kzt INTEGER NOT NULL DEFAULT 250,
+          boost_count INTEGER NOT NULL DEFAULT 0
         )
         """)
         columns = {row["name"] for row in db.execute("PRAGMA table_info(orders)")}
         if "stops_json" not in columns:
             db.execute("ALTER TABLE orders ADD COLUMN stops_json TEXT NOT NULL DEFAULT '[]'")
+        if "price_kzt" not in columns:
+            db.execute("ALTER TABLE orders ADD COLUMN price_kzt INTEGER NOT NULL DEFAULT 250")
+        if "boost_count" not in columns:
+            db.execute("ALTER TABLE orders ADD COLUMN boost_count INTEGER NOT NULL DEFAULT 0")
         db.execute("CREATE INDEX IF NOT EXISTS idx_orders_status_service ON orders(status, service)")
         db.execute("""
         CREATE TABLE IF NOT EXISTS driver_presence (
@@ -157,6 +169,7 @@ def row_to_order(row: sqlite3.Row) -> dict:
         "passengerId": row["passenger_id"], "driverId": row["driver_id"],
         "status": row["status"], "createdAt": row["created_at"],
         "stops": json.loads(row["stops_json"] or "[]"),
+        "priceKzt": row["price_kzt"], "boostCount": row["boost_count"],
     }
 
 @app.get("/health")
@@ -177,12 +190,14 @@ def create_order(body: OrderCreate, x_dev_user_id: str | None = Header(default=N
             """INSERT INTO orders (
                  id, service, pickup_lat, pickup_lon, pickup_address,
                  destination_lat, destination_lon, destination_address,
-                 vehicle_class, note, passenger_id, driver_id, status, created_at, stops_json
-               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                 vehicle_class, note, passenger_id, driver_id, status, created_at, stops_json,
+                 price_kzt, boost_count
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (order_id, body.service, body.pickup.latitude, body.pickup.longitude,
              body.pickup.address, body.destination.latitude, body.destination.longitude,
              body.destination.address, body.vehicleClass, body.note, passenger_id,
-             None, "searching", created, json.dumps([point.model_dump() for point in body.stops])),
+             None, "searching", created, json.dumps([point.model_dump() for point in body.stops]),
+             body.priceKzt, 0),
         )
         row = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
     return row_to_order(row)
@@ -253,6 +268,27 @@ def available_orders(
             (driver_id, *allowed_services),
         ).fetchall()
     return [row_to_order(row) for row in rows]
+
+@app.post("/v1/orders/{order_id}/boost", response_model=OrderOut)
+def boost_order(order_id: str, body: BoostUpdate, x_dev_user_id: str | None = Header(default=None)):
+    passenger_id = dev_identity(x_dev_user_id)
+    with _LOCK, connection() as db:
+        db.execute("BEGIN IMMEDIATE")
+        row = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
+        if row is None:
+            db.rollback()
+            raise HTTPException(404, "Заявка не найдена")
+        if row["passenger_id"] != passenger_id:
+            db.rollback()
+            raise HTTPException(403, "Только пассажир может повысить цену")
+        if row["status"] != "searching":
+            db.rollback()
+            raise HTTPException(409, "Повысить цену можно только пока ищем водителя")
+        db.execute("UPDATE orders SET price_kzt=price_kzt+?, boost_count=boost_count+1 WHERE id=?", (body.amountKzt, order_id))
+        updated = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
+        db.commit()
+    return row_to_order(updated)
+
 
 @app.post("/v1/orders/{order_id}/accept", response_model=OrderOut)
 def accept_order(order_id: str, x_dev_user_id: str | None = Header(default=None)):
