@@ -358,21 +358,9 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10243A),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Bake Taxi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        Text('ТАКСИ • ДОСТАВКА • ПОМОЩЬ', style: TextStyle(color: Color(0xFFE3BD70), fontSize: 9, letterSpacing: .7)),
-                      ],
-                    ),
-                  ),
+                  const Text('Bake Taxi', style: TextStyle(
+                    color: Color(0xFF172B3A), fontSize: 20, fontWeight: FontWeight.w900)),
+
                   const Spacer(),
                   Material(
                     color: Colors.white,
@@ -528,70 +516,33 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                       ]),
                     ),
                   const SizedBox(height: 8),
-                  const Text('Категории услуг', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
+                  const Text('Услуга', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF172B3A))),
                   const SizedBox(height: 8),
                   SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
                     _serviceTab('Такси', JibekServiceType.cityTaxi),
-                    _serviceTab('Доставка и Грузовой', JibekServiceType.freight),
-                    _serviceTab('Спецтехника', JibekServiceType.towTruck),
                     _serviceTab('Межгород', JibekServiceType.intercity),
+                    _serviceTab('Посылка', JibekServiceType.parcel),
+                    _serviceTab('Грузовой', JibekServiceType.freight),
+                    _serviceTab('Эвакуатор', JibekServiceType.towTruck),
+                    _serviceTab('Шиномонтаж', JibekServiceType.mobileTire),
                   ])),
-                  const SizedBox(height: 12),
-                  const Text('Что вам нужно?', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      (JibekServiceType.cityTaxi, 'Городское такси'),
-                      (JibekServiceType.intercity, 'Межгород'),
-                      (JibekServiceType.parcel, 'Доставка / Посылка'),
-                      (JibekServiceType.freight, 'Грузовой'),
-                      (JibekServiceType.towTruck, 'Эвакуатор'),
-                      (JibekServiceType.mobileTire, 'Шиномонтаж'),
-                    ].map((item) => ChoiceChip(
-                      label: Text(item.$2),
-                      selected: _service == item.$1,
-                      onSelected: (_) => setState(() => _service = item.$1),
-                      selectedColor: const Color(0xFFE9EEF4),
-                    )).toList(),
-                  ),
-                  if (_service == JibekServiceType.cityTaxi) ...[
-                    const SizedBox(height: 8),
-                    const Text('Класс автомобиля', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF26384D))),
-                  const SizedBox(height: 9),
-                  Wrap(
-                    spacing: 8,
-                    children: ['Эконом', 'Комфорт', 'Бизнес'].map((item) => ChoiceChip(
-                      label: Text(item),
-                      selected: _class == item,
-                      onSelected: (_) => setState(() => _class = item),
-                      selectedColor: const Color(0xFFE9EEF4),
-                      labelStyle: TextStyle(fontWeight: FontWeight.w700, color: _class == item ? const Color(0xFF10243A) : const Color(0xFF657184)),
-                      side: BorderSide(color: _class == item ? const Color(0xFFE3BD70) : const Color(0xFFE1E6EC)),
-                    )).toList(),
-                  ),
-                  ],
                   if (_service == JibekServiceType.cityTaxi) ...[
                     const SizedBox(height: 12),
-                    const Text('Выберите тариф', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                    const Text('Выберите тариф', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: Color(0xFF172B3A))),
                     const SizedBox(height: 8),
-                    SizedBox(height: 122, child: ListView(scrollDirection: Axis.horizontal, children: [
-                      _tariffCard('Вместе', Icons.people_alt_rounded, 'от 4 мин', 'Цена после маршрута'),
+                    SizedBox(height: 128, child: ListView(scrollDirection: Axis.horizontal, children: [
                       _tariffCard('Эконом', Icons.directions_car_rounded, 'от 2 мин', 'Цена после маршрута'),
-                      _tariffCard('Комфорт', Icons.airline_seat_recline_extra, 'от 5 мин', 'Цена после маршрута'),
-                      _tariffCard('Бизнес', Icons.directions_car_filled, 'от 7 мин', 'Цена после маршрута'),
+                      _tariffCard('Комфорт', Icons.airline_seat_recline_extra_rounded, 'от 5 мин', 'Цена после маршрута'),
+                      _tariffCard('Бизнес', Icons.directions_car_filled_rounded, 'от 7 мин', 'Цена после маршрута'),
                     ])),
                   ],
-                  if (_service == JibekServiceType.freight || _service == JibekServiceType.parcel || _service == JibekServiceType.towTruck || _service == JibekServiceType.mobileTire) ...[
+                  if (_service == JibekServiceType.freight || _service == JibekServiceType.parcel ||
+                      _service == JibekServiceType.towTruck || _service == JibekServiceType.mobileTire) ...[
                     const SizedBox(height: 10),
-                    const Text('Выбранная услуга', style: TextStyle(fontWeight: FontWeight.w900)),
-                    Wrap(spacing: 8, children: [
-                      if (_service == JibekServiceType.parcel) const Chip(label: Text('Посылка')),
-                      if (_service == JibekServiceType.freight) const Chip(label: Text('Грузовой')),
-                      if (_service == JibekServiceType.towTruck) const Chip(label: Text('Эвакуатор')),
-                      if (_service == JibekServiceType.mobileTire) const Chip(label: Text('Шиномонтаж')),
-                    ]),
+                    Text(_service == JibekServiceType.parcel ? 'Доставка посылки' :
+                      _service == JibekServiceType.freight ? 'Грузовой автомобиль' :
+                      _service == JibekServiceType.towTruck ? 'Эвакуатор' : 'Выездной шиномонтаж',
+                      style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF172B3A))),
                   ],
                   const SizedBox(height: 12),
                   TextField(
@@ -648,7 +599,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
                       label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.freight ? 'Заказать грузовую машину' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE3BD70), foregroundColor: const Color(0xFF10243A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC928), foregroundColor: const Color(0xFF172B3A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
                   const SizedBox(height: 8),
