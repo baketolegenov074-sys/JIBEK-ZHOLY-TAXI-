@@ -541,7 +541,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.local_taxi_rounded),
                       label: Text((_searching || _sendingOrder) ? 'Подождите...' : (_route.isNotEmpty ? (_service == JibekServiceType.parcel ? 'Заказать доставку' : _service == JibekServiceType.freight ? 'Заказать грузовую машину' : _service == JibekServiceType.towTruck ? 'Вызвать эвакуатор' : _service == JibekServiceType.mobileTire ? 'Вызвать шиномонтаж' : 'Заказать поездку') : 'Продолжить'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFD400), foregroundColor: const Color(0xFF17212B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE3BD70), foregroundColor: const Color(0xFF10243A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -559,7 +559,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     padding: const EdgeInsets.only(right: 8),
     child: ChoiceChip(
       label: Text(label), selected: _service == service,
-      selectedColor: const Color(0xFFFFE36B),
+      selectedColor: const Color(0xFFE5EBF2),
       onSelected: (_) => setState(() => _service = service),
     ),
   );
@@ -571,12 +571,12 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       child: Container(
         width: 142, margin: const EdgeInsets.only(right: 9), padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFFF4C2) : Colors.white,
+          color: selected ? const Color(0xFFEAF0F6) : Colors.white,
           border: Border.all(color: selected ? const Color(0xFFE3BD70) : const Color(0xFFE1E6EC), width: selected ? 2 : 1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, size: 30, color: const Color(0xFF17212B)),
+          Icon(icon, size: 30, color: const Color(0xFF10243A)),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
           Text(eta, style: const TextStyle(fontSize: 11, color: Color(0xFF687386))),
           Text(price, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
