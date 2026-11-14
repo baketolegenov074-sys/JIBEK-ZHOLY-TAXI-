@@ -145,7 +145,7 @@ class IntercityPage extends StatefulWidget {
 class _IntercityPageState extends State<IntercityPage> {
   final _destination = TextEditingController();
   int _seats = 1;
-  bool _wholeCar = false;
+  String _tripType = 'Место в машине';
   @override
   void dispose() { _destination.dispose(); super.dispose(); }
 
@@ -156,7 +156,7 @@ class _IntercityPageState extends State<IntercityPage> {
     body: ListView(padding: const EdgeInsets.all(18), children: [
       const Text('Куда поедем?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: _ink)),
       const SizedBox(height: 16),
-      TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.trip_origin), labelText: 'Откуда', hintText: 'Шымкент'), controller: TextEditingController(text: 'Шымкент'), readOnly: true),
+      const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.trip_origin), labelText: 'Откуда', hintText: 'Шымкент'), readOnly: true),
       const SizedBox(height: 10),
       TextField(controller: _destination, decoration: const InputDecoration(prefixIcon: Icon(Icons.location_on), labelText: 'Куда', hintText: 'Введите город')),
       const SizedBox(height: 20),
@@ -172,10 +172,10 @@ class _IntercityPageState extends State<IntercityPage> {
         ]),
         const Text('Цена будет рассчитана по маршруту', style: TextStyle(color: _muted, fontSize: 12)),
       ]))),
-      Card(child: RadioListTile<bool>(
-        value: true, groupValue: _wholeCar, onChanged: (v) => setState(() => _wholeCar = v ?? false),
+      Card(child: RadioListTile<String>(
+        value: 'Весь салон', groupValue: _tripType, onChanged: (v) => setState(() => _tripType = v ?? 'Место в машине'),
         title: const Text('Весь салон', style: TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: const Text('Отдельная машина для вашей поездки'),
+        subtitle: const Text('Отдельная машина для вашей поездки • цена рассчитывается по маршруту'),
       )),
       const SizedBox(height: 16),
       SizedBox(height: 56, child: FilledButton(
