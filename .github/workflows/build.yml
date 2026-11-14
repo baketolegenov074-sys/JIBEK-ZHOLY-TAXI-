@@ -69,6 +69,7 @@ jobs:
               python3 - "$icon_source" <<'PY'
           import pathlib
           import sys
+          import subprocess
           from PIL import Image
 
           source = pathlib.Path(sys.argv[1])
@@ -82,14 +83,20 @@ jobs:
               "mipmap-xxhdpi": 144,
               "mipmap-xxxhdpi": 192,
           }
-          with Image.open(source) as original:
-              artwork = original.convert("RGBA")
-              for folder, size in sizes.items():
-                  target_dir = res / folder
-                  target_dir.mkdir(parents=True, exist_ok=True)
-                  resized = artwork.resize((size, size), Image.Resampling.LANCZOS)
-                  for name in ("ic_launcher.png", "ic_launcher_round.png"):
-                      resized.save(target_dir / name, format="PNG")
+          artwork = Image.open(source).convert("RGBA") if source.suffix.lower() != ".svg" else None
+          for folder, size in sizes.items():
+              target_dir = res / folder
+              target_dir.mkdir(parents=True, exist_ok=True)
+              for name in ("ic_launcher.png", "ic_launcher_round.png"):
+                  target = target_dir / name
+                  if source.suffix.lower() == ".svg":
+                      subprocess.run(
+                          ["rsvg-convert", "-w", str(size), "-h", str(size),
+                           "-o", str(target), str(source)],
+                          check=True,
+                      )
+                  else:
+                      artwork.resize((size, size), Image.Resampling.LANCZOS).save(target, format="PNG")
           # Disable generated adaptive-icon XML so Android uses the custom density PNGs.
           adaptive = res / "mipmap-anydpi-v26"
           if adaptive.exists():
