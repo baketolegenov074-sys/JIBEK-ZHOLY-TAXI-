@@ -220,6 +220,10 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'] as Map<String, dynamic>;
       final coordinates = geometry['coordinates'] as List<dynamic>;
+      if (coordinates.length < 2) {
+        _message('Маршрут получен без координат. Попробуйте выбрать адрес ещё раз.');
+        return;
+      }
       final points = coordinates.map((pair) {
         final p = pair as List<dynamic>;
         return LatLng((p[1] as num).toDouble(), (p[0] as num).toDouble());
