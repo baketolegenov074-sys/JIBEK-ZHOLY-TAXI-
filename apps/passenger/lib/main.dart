@@ -49,6 +49,8 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
   final TextEditingController _stopController = TextEditingController();
   bool _addStop = false;
   String _paymentMethod = 'Наличные';
+  bool _childSeat = false;
+  bool _needMovers = false;
   final LatLng _shymkent = const LatLng(42.3154, 69.5869);
 
   LatLng? _fromPoint;
@@ -593,8 +595,8 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
           const SizedBox(height: 12),
           TextField(controller: _noteController, maxLines: 2, decoration: const InputDecoration(labelText: 'Комментарий водителю')),
           const SizedBox(height: 8),
-          CheckboxListTile(value: false, onChanged: (_) => _message('Добавьте пожелание в комментарий'), title: const Text('Детское кресло'), contentPadding: EdgeInsets.zero),
-          CheckboxListTile(value: false, onChanged: (_) => _message('Добавьте пожелание в комментарий'), title: const Text('Нужны грузчики'), contentPadding: EdgeInsets.zero),
+          CheckboxListTile(value: _childSeat, onChanged: (v) => setState(() => _childSeat = v ?? false), title: const Text('Детское кресло'), contentPadding: EdgeInsets.zero),
+          CheckboxListTile(value: _needMovers, onChanged: (v) => setState(() => _needMovers = v ?? false), title: const Text('Нужны грузчики'), contentPadding: EdgeInsets.zero),
           Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Готово'))),
         ]),
       )),
