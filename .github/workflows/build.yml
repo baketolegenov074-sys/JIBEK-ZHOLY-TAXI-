@@ -183,8 +183,8 @@ jobs:
             echo "Created dist/$output_name"
           }
 
-          build_one apps/passenger client_taxi kz.jibekzholy.client "Bake Taxi" ClientTaxi.apk ../../apps/passenger_icon.png
-          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "Bake Taxi Водитель" DriverTaxi.apk ../../apps/brand_icon.png
+          build_one apps/passenger client_taxi kz.jibekzholy.client "Bake Taxi" ClientTaxi.apk ../../apps/brand_icon.png
+          build_one apps/driver driver_taxi kz.jibekzholy.driverapp "Bake Taxi Водитель" DriverTaxi.apk ../../apps/passenger_icon.png
           build_one apps/owner_admin owner_admin kz.jibekzholy.owneradmin "Bake Taxi Админ" OwnerAdmin.apk ../../apps/admin_icon.png
 
           echo "===== APK files ====="
