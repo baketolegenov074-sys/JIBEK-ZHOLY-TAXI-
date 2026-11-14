@@ -1,4 +1,4 @@
-# ЖІБЕК ЖОЛЫ — Flutter development
+# Bake Taxi — Flutter development
 
 Flutter migration is developed on `flutter-migration`. The original Kotlin modules remain in the repository as backup until Flutter validation is complete.
 

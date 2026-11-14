@@ -1,4 +1,4 @@
-# ЖІБЕК ЖОЛЫ — API contract (draft)
+# Bake Taxi — API contract (draft)
 
 This document defines the first backend boundary shared by the passenger and
 driver Flutter applications. It is a contract, not a claim that a server is
