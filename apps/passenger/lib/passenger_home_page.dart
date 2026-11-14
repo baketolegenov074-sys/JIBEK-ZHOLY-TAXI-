@@ -28,7 +28,7 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         await requestBakeTaxiPermissions();
         if (mounted) _loadCurrentAddress();
