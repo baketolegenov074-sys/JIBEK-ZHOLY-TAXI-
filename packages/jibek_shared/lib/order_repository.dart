@@ -23,6 +23,8 @@ abstract interface class JibekOrderRepository {
 
   Future<JibekOrderRequest> acceptOrder({required String orderId});
 
+  Future<JibekOrderRequest> boostOrder({required String orderId, int amountKzt = 250});
+
   Future<JibekOrderRequest> updateOrderStatus({
     required String orderId,
     required JibekOrderStatus status,
@@ -98,6 +100,8 @@ class DevJibekApiRepository implements JibekOrderRepository {
             .toList(growable: false),
         passengerId: json['passengerId'] as String?,
         status: JibekOrderStatus.values.byName(json['status'] as String),
+        priceKzt: (json['priceKzt'] as num?)?.toInt() ?? 250,
+        boostCount: (json['boostCount'] as num?)?.toInt() ?? 0,
       );
 
   Map<String, Object?> _createPayload(JibekOrderRequest order) => {
@@ -108,6 +112,7 @@ class DevJibekApiRepository implements JibekOrderRepository {
         if (order.note != null) 'note': order.note,
         if (order.stops.isNotEmpty)
           'stops': order.stops.map((point) => point.toJson()).toList(),
+        'priceKzt': order.priceKzt,
       };
 
   @override
@@ -209,6 +214,15 @@ class DevJibekApiRepository implements JibekOrderRepository {
         headers: headers,
       ),
     );
+    return _orderFromApi(json);
+  }
+
+  @override
+  Future<JibekOrderRequest> boostOrder({required String orderId, int amountKzt = 250}) async {
+    final json = await _send((headers) => _client.post(
+      _uri('/v1/orders/$orderId/boost'), headers: headers,
+      body: jsonEncode({'amountKzt': amountKzt}),
+    ));
     return _orderFromApi(json);
   }
 
