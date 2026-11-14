@@ -648,12 +648,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       setState(() => _createdOrder = created);
       final preferences = await SharedPreferences.getInstance();
       await preferences.setString('jibek_passenger_active_order_id', created.id);
-      final history = preferences.getStringList('bake_taxi_order_history') ?? <String>[];
-      history.removeWhere((entry) {
-        try { return (jsonDecode(entry) as Map)['id'] == created.id; } catch (_) { return false; }
-      });
-      history.insert(0, jsonEncode(created.toJson()));
-      await preferences.setStringList('bake_taxi_order_history', history.take(20).toList());
+      await _saveOrderToHistory(created);
       _message('Заявка создана. Номер: ' + created.id);
     } on JibekApiException catch (e) {
       _message('Не удалось отправить заявку: ' + e.message);
@@ -685,6 +680,23 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
     }
   }
 
+  Future<void> _saveOrderToHistory(JibekOrderRequest order) async {
+    final preferences = await SharedPreferences.getInstance();
+    final history = preferences.getStringList('bake_taxi_order_history') ?? <String>[];
+    history.removeWhere((entry) {
+      try {
+        return (jsonDecode(entry) as Map)['id'] == order.id;
+      } catch (_) {
+        return false;
+      }
+    });
+    history.insert(0, jsonEncode(order.toJson()));
+    await preferences.setStringList(
+      'bake_taxi_order_history',
+      history.take(20).toList(),
+    );
+  }
+
   String _statusLabel(JibekOrderStatus status) => switch (status) {
         JibekOrderStatus.searching => 'Ищем водителя',
         JibekOrderStatus.accepted => 'Водитель принял заказ',
@@ -714,6 +726,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       final updated = await repository.getOrder(orderId: order.id);
       if (!mounted) return;
       setState(() => _createdOrder = updated);
+      await _saveOrderToHistory(updated);
       _message('Статус обновлён: ${_statusLabel(updated.status)}');
     } on JibekApiException catch (e) {
       _message('Не удалось обновить статус: ${e.message}');
@@ -755,6 +768,7 @@ class _PassengerMapPageState extends State<PassengerMapPage> {
       );
       if (!mounted) return;
       setState(() => _createdOrder = updated);
+      await _saveOrderToHistory(updated);
       _message('Заявка отменена');
     } on JibekApiException catch (e) {
       _message('Не удалось отменить заявку: ${e.message}');
