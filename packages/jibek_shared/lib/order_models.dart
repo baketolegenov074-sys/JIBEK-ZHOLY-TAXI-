@@ -1,5 +1,5 @@
 /// Shared domain contract used by the passenger app, driver app and API.
-enum JibekServiceType { cityTaxi, intercity, parcel, towTruck, mobileTire }
+enum JibekServiceType { cityTaxi, intercity, parcel, freight, towTruck, mobileTire }
 
 enum JibekOrderStatus {
   draft,
@@ -79,12 +79,15 @@ class JibekOrderRequest {
       return 'Для городского такси выберите класс автомобиля';
     }
     if ((service == JibekServiceType.parcel ||
+            service == JibekServiceType.freight ||
             service == JibekServiceType.towTruck ||
             service == JibekServiceType.mobileTire) &&
         (note == null || note!.trim().isEmpty)) {
       return service == JibekServiceType.parcel
           ? 'Опишите посылку и что нужно доставить'
-          : service == JibekServiceType.towTruck
+          : service == JibekServiceType.freight
+              ? 'Опишите груз, габариты и адрес доставки'
+              : service == JibekServiceType.towTruck
               ? 'Укажите автомобиль и характер поломки'
               : 'Укажите размер колёс и проблему';
     }
