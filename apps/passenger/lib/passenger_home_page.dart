@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:jibek_shared/jibek_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'permissions/startup_permissions.dart';
 import 'main.dart';
 
 const _ink = Color(0xFF10243A);
@@ -28,7 +29,10 @@ class _PassengerHomePageState extends State<PassengerHomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _loadCurrentAddress();
+      if (mounted) {
+        await requestBakeTaxiPermissions();
+        if (mounted) _loadCurrentAddress();
+      }
     });
   }
 
