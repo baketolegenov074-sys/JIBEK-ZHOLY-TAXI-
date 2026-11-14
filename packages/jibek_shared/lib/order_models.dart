@@ -54,6 +54,8 @@ class JibekOrderRequest {
     this.stops = const [],
     this.passengerId,
     this.status = JibekOrderStatus.draft,
+    this.priceKzt = 250,
+    this.boostCount = 0,
   });
 
   final String id;
@@ -66,6 +68,9 @@ class JibekOrderRequest {
   final List<JibekGeoPoint> stops;
   final String? passengerId;
   final JibekOrderStatus status;
+  final int priceKzt;
+  final int boostCount;
+  bool get isBoosted => boostCount > 0;
 
   String? validate() {
     if (id.trim().isEmpty) return 'Не указан идентификатор заявки';
@@ -115,6 +120,8 @@ class JibekOrderRequest {
         if (stops.isNotEmpty) 'stops': stops.map((point) => point.toJson()).toList(),
         if (passengerId != null) 'passengerId': passengerId,
         'status': status.name,
+        'priceKzt': priceKzt,
+        'boostCount': boostCount,
       };
 
   factory JibekOrderRequest.fromJson(Map<String, Object?> json) =>
@@ -137,5 +144,7 @@ class JibekOrderRequest {
         status: JibekOrderStatus.values.byName(
           json['status'] as String? ?? JibekOrderStatus.draft.name,
         ),
+        priceKzt: (json['priceKzt'] as num?)?.toInt() ?? 250,
+        boostCount: (json['boostCount'] as num?)?.toInt() ?? 0,
       );
 }
