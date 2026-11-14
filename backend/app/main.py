@@ -37,6 +37,7 @@ class OrderCreate(BaseModel):
     service: Service
     pickup: Point
     destination: Point
+    stops: list[Point] = Field(default_factory=list, max_length=1)
     vehicleClass: str | None = Field(default=None, max_length=40, validate_default=True)
     note: str | None = Field(default=None, max_length=500)
 
@@ -66,6 +67,12 @@ class OrderCreate(BaseModel):
             self.destination.latitude, self.destination.longitude
         ):
             raise ValueError("Точки отправления и назначения совпадают")
+        for stop in self.stops:
+            if (stop.latitude, stop.longitude) in {
+                (self.pickup.latitude, self.pickup.longitude),
+                (self.destination.latitude, self.destination.longitude),
+            }:
+                raise ValueError("Остановка должна отличаться от начала и конца маршрута")
 
 class OrderOut(BaseModel):
     id: str
@@ -78,6 +85,7 @@ class OrderOut(BaseModel):
     driverId: str | None
     status: Status
     createdAt: str
+    stops: list[Point] = Field(default_factory=list)
 
 class StatusUpdate(BaseModel):
     status: Status
@@ -114,9 +122,13 @@ def init_db():
           pickup_lat REAL NOT NULL, pickup_lon REAL NOT NULL, pickup_address TEXT,
           destination_lat REAL NOT NULL, destination_lon REAL NOT NULL, destination_address TEXT,
           vehicle_class TEXT, note TEXT, passenger_id TEXT NOT NULL,
-          driver_id TEXT, status TEXT NOT NULL, created_at TEXT NOT NULL
+          driver_id TEXT, status TEXT NOT NULL, created_at TEXT NOT NULL,
+          stops_json TEXT NOT NULL DEFAULT '[]'
         )
         """)
+        columns = {row["name"] for row in db.execute("PRAGMA table_info(orders)")}
+        if "stops_json" not in columns:
+            db.execute("ALTER TABLE orders ADD COLUMN stops_json TEXT NOT NULL DEFAULT '[]'")
         db.execute("CREATE INDEX IF NOT EXISTS idx_orders_status_service ON orders(status, service)")
         db.execute("""
         CREATE TABLE IF NOT EXISTS driver_presence (
@@ -144,6 +156,7 @@ def row_to_order(row: sqlite3.Row) -> dict:
         "vehicleClass": row["vehicle_class"], "note": row["note"],
         "passengerId": row["passenger_id"], "driverId": row["driver_id"],
         "status": row["status"], "createdAt": row["created_at"],
+        "stops": json.loads(row["stops_json"] or "[]"),
     }
 
 @app.get("/health")
@@ -161,11 +174,15 @@ def create_order(body: OrderCreate, x_dev_user_id: str | None = Header(default=N
     created = datetime.now(timezone.utc).isoformat()
     with _LOCK, connection() as db:
         db.execute(
-            """INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO orders (
+                 id, service, pickup_lat, pickup_lon, pickup_address,
+                 destination_lat, destination_lon, destination_address,
+                 vehicle_class, note, passenger_id, driver_id, status, created_at, stops_json
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (order_id, body.service, body.pickup.latitude, body.pickup.longitude,
              body.pickup.address, body.destination.latitude, body.destination.longitude,
              body.destination.address, body.vehicleClass, body.note, passenger_id,
-             None, "searching", created),
+             None, "searching", created, json.dumps([point.model_dump() for point in body.stops])),
         )
         row = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
     return row_to_order(row)
