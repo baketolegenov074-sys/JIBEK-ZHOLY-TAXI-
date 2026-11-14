@@ -42,6 +42,12 @@ class _DriverMapPageState extends State<DriverMapPage> {
   static const _apiUrl = String.fromEnvironment('JIBEK_API_URL');
   static const _devUserId = String.fromEnvironment('JIBEK_DEV_USER_ID');
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _locateDriver());
+  }
+
   Future<void> _locateDriver() async {
     setState(() => _loadingLocation = true);
     try {
@@ -127,11 +133,11 @@ class _DriverMapPageState extends State<DriverMapPage> {
                     const SizedBox(height: 12),
                     _mapAction(Icons.add, 'Приблизить',
                         () => _mapController.move(_mapController.camera.center,
-                            (_mapController.camera.zoom + 1).clamp(3, 19))),
+                            (_mapController.camera.zoom + 1).clamp(3, 19).toDouble())),
                     const SizedBox(height: 8),
                     _mapAction(Icons.remove, 'Отдалить',
                         () => _mapController.move(_mapController.camera.center,
-                            (_mapController.camera.zoom - 1).clamp(3, 19))),
+                            (_mapController.camera.zoom - 1).clamp(3, 19).toDouble())),
                     const SizedBox(height: 8),
                     _mapAction(Icons.layers_outlined, 'Слои карты',
                         () => setState(() => _alternateMap = !_alternateMap)),
